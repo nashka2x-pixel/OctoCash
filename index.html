@@ -51,6 +51,13 @@
   #tbody input[type="number"] { width: 3.5rem; }  /* ~56px */
   #tbody select { width: 1.5rem; padding-left: .25rem; padding-right: .25rem; }
 }
+    @media (max-width: 420px){
+  table.w-full td, table.w-full th { padding: .35rem .4rem; }
+  #totalCaisse { font-size: 1.5rem; }
+  /* largeur mini sur la colonne Total */
+  thead th:last-child { width: 120px; }
+}
+
     /* Inputs numériques -> clavier numérique sur mobile et suppression du style bleu */
     input[type=number],
     select {
@@ -319,8 +326,9 @@ function makeRow(key, label, valueCents, hasRoll){
     </td>
     <td class="p-2 text-center font-medium">${rollsCell}</td>
     <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-    <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
-  `; // <— IMPORTANT : on ferme la template string ici
+  <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-6 sm:pr-8" data-total="${key}">0,00 €</td>
+`;
+ // <— IMPORTANT : on ferme la template string ici
 
   tbody.appendChild(tr);
   rows.push({ key, valueCents, hasRoll });
