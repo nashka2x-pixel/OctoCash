@@ -119,10 +119,17 @@
       color: #e5e5e5; opacity: .85; font-weight: 600;
     }
     .signature svg { width: 18px; height: 18px; display: inline-block; }
+
+/* Empêche le zoom automatique sur iOS quand on clique sur un input */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
   </style>
 </head>
 <body class="min-h-screen text-gray-100">
-  <div class="max-w-sm mx-auto p-4 pb-28">
+  <div class="max-w-md mx-auto p-4 pb-28">
     <!-- (Titres supprimés comme demandé) -->
 
     <!-- Tableau de saisie -->
@@ -131,7 +138,7 @@
         <table class="w-full text-sm">
           <thead class="text-gray-200">
             <tr>
-              <th class="text-center p-2">Vrac 🪙</th>
+              <th class="text-center p-2">Vrac 🟡</th>
     	      <th class="text-center p-2">Rouleaux</th>
               <th class="text-center p-2">Valeur €</th>
               <th class="text-right p-2">Total 💰</th>
@@ -234,26 +241,26 @@
   <script>
     // --- Modèle des dénominations (centimes) ---
     const EURO = {
-      coins: [
-        { value: 1,   label: '<span class="text-[10px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">1 cent</span>', roll: 50 },
-        { value: 2,   label: '<span class="text-[11px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">2 cents</span>', roll: 50 },
-        { value: 5,   label: '<span class="text-xs">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">5 cents</span>', roll: 50 },
-        { value: 10,  label: '<span class="mr-1 text-sm">🟡</span><span class="text-[13px] font-medium align-middle">10 cents</span>', roll: 40 },
-        { value: 20,  label: '<span class="mr-1 text-base">🟡</span><span class="text-[13px] font-medium align-middle">20 cents</span>', roll: 40 },
-        { value: 50,  label: '<span class="mr-1 text-lg">🟡</span><span class="text-[13px] font-medium align-middle">50 cents</span>', roll: 40 },
-        { value: 100, label: '<span class="text-lg">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">1 €</span>', roll: 25 },
-        { value: 200, label: '<span class="text-xl">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">2 €</span>', roll: 25 },
-      ],
-      notes: [5,10,20,50,100,200,500].map(v => ({
-        value: v*100,
-        label:
-          v === 5  ? `<span class="text-lg">💶</span> ${v} €` :
-          v === 10 ? `<span class="text-lg">💴</span> ${v} €` :
-          v <= 20  ? `<span class="text-lg">💷</span> ${v} €` :
-          v <= 100 ? `<span class="text-xl">💵</span> ${v} €` :
-                     `<span class="text-2xl">💶</span> ${v} €`
-      }))
-    };
+  coins: [
+    { value: 1,   label: '<span class="whitespace-nowrap"><span class="text-[10px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">1 cent</span></span>', roll: 50 },
+    { value: 2,   label: '<span class="whitespace-nowrap"><span class="text-[11px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">2 cents</span></span>', roll: 50 },
+    { value: 5,   label: '<span class="whitespace-nowrap"><span class="text-xs">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">5 cents</span></span>', roll: 50 },
+    { value: 10,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-sm">🟡</span><span class="text-[13px] font-medium align-middle">10 cents</span></span>', roll: 40 },
+    { value: 20,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-base">🟡</span><span class="text-[13px] font-medium align-middle">20 cents</span></span>', roll: 40 },
+    { value: 50,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-lg">🟡</span><span class="text-[13px] font-medium align-middle">50 cents</span></span>', roll: 40 },
+    { value: 100, label: '<span class="whitespace-nowrap"><span class="text-lg">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">1 €</span></span>', roll: 25 },
+    { value: 200, label: '<span class="whitespace-nowrap"><span class="text-xl">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">2 €</span></span>', roll: 25 },
+  ],
+  notes: [5,10,20,50,100,200,500].map(v => ({
+    value: v*100,
+    label:
+      v === 5  ? `<span class="whitespace-nowrap"><span class="text-lg">💶</span> ${v} €</span>` :
+      v === 10 ? `<span class="whitespace-nowrap"><span class="text-lg">💴</span> ${v} €</span>` :
+      v <= 20  ? `<span class="whitespace-nowrap"><span class="text-lg">💷</span> ${v} €</span>` :
+      v <= 100 ? `<span class="whitespace-nowrap"><span class="text-xl">💵</span> ${v} €</span>` :
+                 `<span class="whitespace-nowrap"><span class="text-2xl">💶</span> ${v} €</span>`
+  }))
+};
 
     // Etat courant
     const state = {
@@ -441,28 +448,75 @@
     }
 
     // --- Rendu résultats (pièces -> billets) ---
-    function renderRecetteOrdered(container, map){
-      container.innerHTML = '';
-      const order = EURO.coins.map(c=>({v:c.value, lab:c.label}))
-                        .concat(EURO.notes.map(n=>({v:n.value, lab:n.label})));
-      let any=false;
-      order.forEach(({v}) => {
-        const obj = map.get(v);
-        if (!obj) return;
-        const rollSize = obj.rollSize || 0;
-        const parts = [];
-        if (obj.coin) { parts.push(`${obj.coin}× ${fmt.format(v/100)} (vrac)`); }
-        if (obj.roll) { parts.push(`${obj.roll}× ${fmt.format((v*rollSize)/100)} (rouleau)`); }
-        if (obj.bill) { parts.push(`${obj.bill}× ${fmt.format(v/100)}`); }
-        if (parts.length){
-          any=true;
-          const line = document.createElement('div');
-          line.textContent = parts.join('  •  ');
-          container.appendChild(line);
+function renderRecetteOrdered(container, map){
+  container.innerHTML = '';
+
+  const order = EURO.coins.map(c=>({v:c.value}))
+                  .concat(EURO.notes.map(n=>({v:n.value})));
+
+  let any = false;
+
+  order.forEach(({ v }) => {
+    const obj = map.get(v);
+    if (!obj) return;
+
+    const rollSize = obj.rollSize || 0;
+    const line = document.createElement('div');
+    line.className = 'text-base font-semibold text-gray-100'; // un peu plus gros/épais
+
+    const segments = [];
+
+    // Pièces en vrac
+    if (obj.coin) {
+      const seg = document.createElement('span');
+      seg.className = 'inline-flex items-center gap-1';
+      seg.textContent = `${obj.coin}× ${fmt.format(v/100)} `;
+      const emoji = document.createElement('span');
+      emoji.textContent = '🟡';
+      seg.appendChild(emoji);
+      segments.push(seg);
+    }
+
+    // Rouleaux (pièces)
+    if (obj.roll) {
+      const seg = document.createElement('span');
+      seg.className = 'inline-flex items-center gap-1';
+      seg.textContent = `${obj.roll}× ${fmt.format((v*rollSize)/100)} `;
+      const emoji = document.createElement('span');
+      emoji.textContent = '🟡';
+      seg.appendChild(emoji);
+      segments.push(seg);
+    }
+
+    // Billets
+    if (obj.bill) {
+      const seg = document.createElement('span');
+      seg.className = 'inline-flex items-center gap-1';
+      seg.textContent = `${obj.bill}× ${fmt.format(v/100)} `;
+      const emoji = document.createElement('span');
+      emoji.textContent = '💶';
+      seg.appendChild(emoji);
+      segments.push(seg);
+    }
+
+    if (segments.length){
+      any = true;
+      // ajouter avec séparateurs " • "
+      segments.forEach((seg, i) => {
+        line.appendChild(seg);
+        if (i < segments.length - 1){
+          const sep = document.createElement('span');
+          sep.textContent = '  •  ';
+          line.appendChild(sep);
         }
       });
-      if (!any){ container.innerHTML = '<div class="text-gray-500">—</div>'; }
+      container.appendChild(line);
     }
+  });
+
+  if (!any){ container.innerHTML = '<div class="text-gray-500">—</div>'; }
+}
+
 
     // --- Interactions UI ---
     function refreshTotals(){
