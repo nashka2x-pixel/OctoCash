@@ -131,10 +131,22 @@
   textarea {
     font-size: 16px !important;
   }
+    /* Ne jamais couper les montants */
+td[data-total],
+#totalCaisse {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+    /* Resserre un peu la saisie sur petit écran */
+@media (max-width: 420px){
+  #tbody input[type="number"] { width: 3.1rem !important; }
+  #tbody select { width: 2.4rem !important; }
+}
+
   </style>
 </head>
 <body class="min-h-screen text-gray-100">
-  <div class="max-w-md mx-auto p-4 pb-28">
+  <div class="max-w-sm mx-auto p-4 pb-36">
     <!-- (Titres supprimés comme demandé) -->
 
     <!-- Tableau de saisie -->
@@ -143,9 +155,9 @@
         <table class="w-full text-sm">
           <thead class="text-gray-200">
   <tr>
-    <th class="text-center p-2 w-[80px]">Vrac 🟡</th>
-    <th class="text-center p-2 w-[50px]">Rouleaux</th>
-    <th class="text-center p-2 w-[90px]">Valeur €</th>
+    <th class="text-center p-2 w-[84px]">Vrac 🟡</th>
+    <th class="text-center p-2 w-[58px]">Rouleaux</th>
+    <th class="text-center p-2 w-[100px]">Valeur €</th>
     <th class="text-right p-2">Total 💰</th>
   </tr>
 </thead>
@@ -304,7 +316,7 @@
         </td>
         <td class="p-2 text-center font-medium">${rollsCell}</td>
         <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-        <td class="p-2 text-right mono font-bold text-yellow-400 pr-4 data-total="${key}">0,00 €</td>`;
+        <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
 
       tbody.appendChild(tr);
       rows.push({ key, valueCents, hasRoll });
@@ -523,12 +535,33 @@ function renderRecetteOrdered(container, map){
   if (!any){ container.innerHTML = '<div class="text-gray-500">—</div>'; }
 }
 
+// Restaurer les données si dispo
+const saved = localStorage.getItem("octocash-data");
+if (saved) {
+  const inv = new Map(Object.entries(JSON.parse(saved)).map(([k,v]) => [Number(k), v]));
 
+  rows.forEach(r => {
+    const entry = inv.get(r.valueCents);
+    if (entry) {
+      // Remplir les champs
+      const input = document.querySelector(`input[data-key="${r.key}"][data-type="loose"]`);
+      if (input) input.value = entry.loose || "";
+
+      if (r.hasRoll) {
+        const select = document.querySelector(`select[data-key="${r.key}"][data-type="rolls"]`);
+        if (select) select.value = entry.rolls || "0";
+      }
+    }
+  });
+}
     // --- Interactions UI ---
     function refreshTotals(){
-      const inv = getInputCounts();
-      computeTotals(inv);
-    }
+  const inv = getInputCounts();
+  computeTotals(inv);
+
+  // Sauvegarde dans localStorage
+  localStorage.setItem("octocash-data", JSON.stringify(Object.fromEntries(inv)));
+}
 
     // Recalcul en live
     tbody.addEventListener('input', refreshTotals);
