@@ -154,7 +154,7 @@
   <tr>
     <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
     <th class="text-left p-2 w-[50px]  sm:w-[58px]">Rouleaux</th>
-    <th class="text-center p-2 w-[86px]  sm:w-[100px]">Valeur €</th>
+    <th class="text-center p-2 w-[86px]  sm:w-[100px]">Valeurs €</th>
     <th class= p-2">Total 💰</th>
   </tr>
 </thead>
@@ -360,174 +360,241 @@ function makeRow(key, label, valueCents, hasRoll){
 
     function centsToStr(c){ return fmt.format(c/100); }
 
-    // --- Calcul de la recette par DP (préférence gros billets, vrac > rouleaux) ---
-    function calcRecette(inv, fondCible){
-      const total = Array.from(inv.entries()).reduce((s,[v,{loose,rolls,rollSize}])=> s + (loose + rolls*rollSize)*v, 0);
-      const toRecipe = total - fondCible;
-      if (toRecipe < 0) {
-        return { ok:false, message:`Total insuffisant pour atteindre le fond choisi (${centsToStr(fondCible)}). Manque ${centsToStr(-toRecipe)}.` };
-      }
-      if (toRecipe === 0) {
-        return { ok:true, recette: new Map(), fond: structuredClone(inv), total, fondCible, recetteTotal:0 };
-      }
+    // === 1) calcRecette (non destructif + méta rouleaux cassés) ===
+function calcRecette(inv, fondCible){
+  const total = Array.from(inv.entries()).reduce((s,[v,{loose,rolls,rollSize}])=> s + (loose + rolls*rollSize)*v, 0);
+  const toRecipe = total - fondCible;
+  if (toRecipe < 0) {
+    return { ok:false, message:`Total insuffisant pour atteindre le fond choisi (${centsToStr(fondCible)}). Manque ${centsToStr(-toRecipe)}.` };
+  }
+  if (toRecipe === 0) {
+    return {
+      ok:true,
+      recette:new Map(),
+      fond: structuredClone(inv), // on ne modifie jamais ta saisie
+      total, fondCible, recetteTotal:0,
+      metaRollsBroken:new Map(),
+      metaCoinsFromRoll:new Map()
+    };
+  }
 
-      const items = [];
-      // Billets (bucket 'bill')
-      EURO.notes.forEach(n => {
-        const v = n.value; const entry = inv.get(v) || {loose:0, rolls:0, rollSize:0};
-        if (entry.loose>0) items.push({ value:v, count:entry.loose, unitLabel:n.label, bucket:'bill', denom:v });
-      });
-      // Pièces en vrac (bucket 'coin')
-      EURO.coins.forEach(c => {
-        const v = c.value; const entry = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll};
-        if (entry.loose>0) items.push({ value:v, count:entry.loose, unitLabel:c.label, bucket:'coin', denom:v });
-      });
-      // Pièces en rouleaux (bucket 'roll')
-      EURO.coins.forEach(c => {
-        const v = c.value; const entry = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll};
-        if (entry.rolls>0) items.push({ value:v*c.roll, count:entry.rolls, unitLabel:`${c.label} (rouleau x${c.roll})`, bucket:'roll', denom:v });
-      });
+  // Items proposés au sac à dos : billets, pièces vrac, pièces issues de rouleaux (pénalisées)
+  const items = [];
 
-      function unitCost(it){
-        const denom = it.bucket==='roll' ? it.denom : it.value;
-        const base = it.bucket==='bill' ? 1000 : (it.bucket==='coin' ? 2000 : 10000);
-        const epsilon = 0.01;
-        return base - epsilon * denom;
-      }
+  // Billets
+  EURO.notes.forEach(n => {
+    const v = n.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:0};
+    if (e.loose > 0) items.push({ value:v, count:e.loose, bucket:'bill', denom:v });
+  });
 
-      // Décomposition binaire bornée -> 0/1 knapsack
-      const chunks = [];
-      items.forEach(it => {
-        let k = it.count, pow = 1;
-        while (k>0){
-          const take = Math.min(pow, k);
-          const amount = (it.bucket==='roll') ? it.value : it.value * take;
-          const cost = unitCost(it) * take;
-          chunks.push({ amount, cost, trace:{ bucket:it.bucket, denom:it.denom, unitValue:it.value, take } });
-          k -= take; pow *= 2;
-        }
-      });
+  // Pièces vrac (prioritaires avant de casser un rouleau)
+  EURO.coins.forEach(c => {
+    const v = c.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll};
+    if (e.loose > 0) items.push({ value:v, count:e.loose, bucket:'coinLoose', denom:v });
+  });
 
-      const R = toRecipe;
-      const INF = 1e15;
-      const dp = new Float64Array(R+1);
-      const prev = new Int32Array(R+1);
-      const used = new Int32Array(R+1);
-      for(let i=1;i<=R;i++){ dp[i]=INF; prev[i]=-1; used[i]=-1; }
-      dp[0]=0; prev[0]=-1; used[0]=-1;
+  // Pièces issues de rouleaux (stock “virtuel” si on casse)
+  EURO.coins.forEach(c => {
+    const v = c.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll};
+    const stockFromRolls = (e.rolls||0) * (e.rollSize||c.roll);
+    if (stockFromRolls > 0) items.push({ value:v, count:stockFromRolls, bucket:'coinFromRoll', denom:v });
+  });
 
-      chunks.forEach((ch, idx) => {
-        for(let a=R; a>=ch.amount; a--){
-          const cand = dp[a - ch.amount] + ch.cost;
-          if (cand < dp[a]) { dp[a] = cand; prev[a] = a - ch.amount; used[a] = idx; }
-        }
-      });
+  // Coût unitaire (plus petit = plus préféré)
+  function unitCost(it){
+    const base =
+      it.bucket==='bill'        ?  800 :   // favorise les billets
+      it.bucket==='coinLoose'   ? 2000 :   // puis pièces vrac
+                                  4000 ;   // pièces issues de rouleaux (pénalisées)
+    const epsilon = 0.01;
+    return base - epsilon * it.denom; // à coût égal, préfère grosses dénominations
+  }
 
-      if (!isFinite(dp[R]) || dp[R] >= INF){
-        return { ok:false, message:`Impossible d'atteindre exactement la recette ${centsToStr(R)} avec les valeurs disponibles.` };
-      }
-
-      // Reconstruction
-      const recetteDetail = new Map();
-      let cur = R;
-      while (cur > 0){
-        const idx = used[cur];
-        const ch = chunks[idx];
-        const key = ch.trace.bucket+":"+ch.trace.denom+":"+ch.trace.unitValue;
-        recetteDetail.set(key, (recetteDetail.get(key)||0) + ch.trace.take);
-        cur = prev[cur];
-      }
-
-      const recetteMap = new Map();
-      const fondMap = new Map();
-
-      inv.forEach((e, v) => {
-        fondMap.set(v, { loose: e.loose, rolls: e.rolls, rollSize: e.rollSize });
-        recetteMap.set(v, { bill:0, coin:0, roll:0, rollSize: e.rollSize });
-      });
-
-      recetteDetail.forEach((take, key) => {
-        const [bucket, denomStr, unitValStr] = key.split(":");
-        const denom = Number(denomStr);
-        const unitVal = Number(unitValStr);
-        const target = recetteMap.get(bucket==='roll' ? denom : unitVal) || { bill:0, coin:0, roll:0 };
-        if (bucket==='bill') {
-          target.bill += take;
-          fondMap.get(unitVal).loose -= take;
-        } else if (bucket==='coin') {
-          target.coin += take;
-          fondMap.get(unitVal).loose -= take;
-        } else {
-          target.roll += take;
-          const fm = fondMap.get(denom);
-          fm.rolls -= take;
-        }
-        recetteMap.set(bucket==='roll' ? denom : unitVal, target);
-      });
-
-      const recetteTotal = Array.from(recetteMap.entries()).reduce((s,[v,obj])=>{
-        const rollSize = (fondMap.get(v)?.rollSize)||0;
-        return s + (obj.bill * v) + (obj.coin * v) + (obj.roll * (v * rollSize));
-      }, 0);
-
-      return { ok:true, recette:recetteMap, fond:fondMap, total, fondCible, recetteTotal };
+  // Bounded knapsack par binary splitting
+  const chunks = [];
+  items.forEach(it => {
+    let k = it.count, pow = 1;
+    while (k > 0){
+      const take = Math.min(pow, k);
+      const amount = it.value * take;
+      const cost = unitCost(it) * take;
+      chunks.push({ amount, cost, trace:{ bucket:it.bucket, denom:it.denom, take } });
+      k -= take; pow *= 2;
     }
+  });
 
-    // --- Rendu résultats (pièces -> billets) ---
-function renderRecetteOrdered(container, map){
+  const R = toRecipe;
+  const INF = 1e15;
+  const dp = new Float64Array(R+1);
+  const prev = new Int32Array(R+1);
+  const used = new Int32Array(R+1);
+  for(let i=1;i<=R;i++){ dp[i]=INF; prev[i]=-1; used[i]=-1; }
+  dp[0]=0; prev[0]=-1; used[0]=-1;
+
+  chunks.forEach((ch, idx) => {
+    for(let a=R; a>=ch.amount; a--){
+      const cand = dp[a - ch.amount] + ch.cost;
+      if (cand < dp[a]) { dp[a] = cand; prev[a] = a - ch.amount; used[a] = idx; }
+    }
+  });
+
+  if (!isFinite(dp[R]) || dp[R] >= INF){
+    return { ok:false, message:`Impossible d'atteindre exactement la recette ${centsToStr(R)} avec les valeurs disponibles.` };
+  }
+
+  // Reconstruction : combien pris en billets / pièces (vrac vs rouleaux)
+  const takeBill = new Map();          // denom -> nb billets
+  const takeCoinLoose = new Map();     // denom -> nb pièces depuis vrac
+  const takeCoinFromRoll = new Map();  // denom -> nb pièces en cassant des rouleaux
+
+  let cur = R;
+  while (cur > 0){
+    const ch = chunks[used[cur]];
+    const d = ch.trace.denom;
+    if (ch.trace.bucket==='bill')           takeBill.set(d, (takeBill.get(d)||0) + ch.trace.take);
+    else if (ch.trace.bucket==='coinLoose') takeCoinLoose.set(d, (takeCoinLoose.get(d)||0) + ch.trace.take);
+    else                                    takeCoinFromRoll.set(d, (takeCoinFromRoll.get(d)||0) + ch.trace.take);
+    cur = prev[cur];
+  }
+
+  // Sortie "recette" pour le rendu (pièces/billets uniquement, jamais “1× 25 €”)
+  const recetteMap = new Map();
+  EURO.coins.forEach(c => {
+    const v = c.value;
+    const coins = (takeCoinLoose.get(v)||0) + (takeCoinFromRoll.get(v)||0);
+    recetteMap.set(v, { bill:0, coin:coins, roll:0, rollSize: inv.get(v)?.rollSize || c.roll });
+  });
+  EURO.notes.forEach(n => {
+    const v = n.value;
+    recetteMap.set(v, { bill:(takeBill.get(v)||0), coin:0, roll:0, rollSize: 0 });
+  });
+
+  const recetteTotal = Array.from(recetteMap.entries()).reduce((s,[v,obj]) => s + v*(obj.bill + obj.coin), 0);
+
+  // Fond renvoyé = clone exact (on ne modifie pas ta fiche)
+  const fondClone = structuredClone(inv);
+
+  // Méta : combien de rouleaux “virtuellement” cassés & nb de pièces issues de rouleaux
+  const metaRollsBroken = new Map();
+  const metaCoinsFromRoll = new Map();
+  EURO.coins.forEach(c => {
+    const v = c.value;
+    const fromRoll = (takeCoinFromRoll.get(v)||0);
+    if (fromRoll > 0){
+      const size = inv.get(v)?.rollSize || c.roll;
+      const rollsToBreak = Math.ceil(fromRoll / size);
+      metaRollsBroken.set(v, rollsToBreak);
+      metaCoinsFromRoll.set(v, fromRoll);
+    }
+  });
+
+  return {
+    ok:true,
+    recette:recetteMap,
+    fond: fondClone,
+    total, fondCible, recetteTotal,
+    metaRollsBroken,
+    metaCoinsFromRoll
+  };
+}
+
+
+// === renderRecetteOrdered avec emojis par dénomination + nombre en gras ===
+function renderRecetteOrdered(container, map, metaCoinsFromRoll = new Map()){
   container.innerHTML = '';
 
-  const order = EURO.coins.map(c=>({v:c.value}))
-                  .concat(EURO.notes.map(n=>({v:n.value})));
+  // petit helper pour fabriquer l’emoji correspondant à la dénomination
+  function createDenomIcon(type, valueCents){
+    const span = document.createElement('span');
+    // Pièces
+    if (type === 'coin'){
+      switch (valueCents){
+        case 1:   span.textContent = '🟤'; span.className = 'text-[10px]'; break; // 1 c
+        case 2:   span.textContent = '🟤'; span.className = 'text-[11px]'; break; // 2 c
+        case 5:   span.textContent = '🟤'; span.className = 'text-xs';     break; // 5 c
+        case 10:  span.textContent = '🟡'; span.className = 'text-sm';     break; // 10 c
+        case 20:  span.textContent = '🟡'; span.className = 'text-base';   break; // 20 c
+        case 50:  span.textContent = '🟡'; span.className = 'text-lg';     break; // 50 c
+        case 100: span.textContent = '🪙'; span.className = 'text-lg';     break; // 1 €
+        case 200: span.textContent = '🪙'; span.className = 'text-xl';     break; // 2 €
+        default:  span.textContent = '🟡'; // fallback
+      }
+    } else {
+      // Billets — on reprend ta logique d’emoji utilisée dans les labels
+      const v = valueCents / 100;
+      if (v === 5)        { span.textContent = '💶'; span.className = 'text-lg'; }
+      else if (v === 10)  { span.textContent = '💴'; span.className = 'text-lg'; }
+      else if (v <= 20)   { span.textContent = '💷'; span.className = 'text-lg'; }
+      else if (v <= 100)  { span.textContent = '💵'; span.className = 'text-xl'; }
+      else                { span.textContent = '💶'; span.className = 'text-2xl'; }
+    }
+    return span;
+  }
+
+  // ordre: pièces (petites -> grosses), puis billets (petits -> gros)
+  const order = EURO.coins.map(c=>({v:c.value, type:'coin'}))
+                .concat(EURO.notes.map(n=>({v:n.value, type:'bill'})));
 
   let any = false;
 
-  order.forEach(({ v }) => {
+  order.forEach(({ v, type }) => {
     const obj = map.get(v);
     if (!obj) return;
 
-    const rollSize = obj.rollSize || 0;
     const line = document.createElement('div');
-    line.className = 'text-base font-semibold text-gray-100'; // un peu plus gros/épais
+    line.className = 'text-base font-semibold text-gray-100';
 
     const segments = [];
 
-    // Pièces en vrac
-    if (obj.coin) {
+    // Pièces
+    if (type==='coin' && obj.coin) {
       const seg = document.createElement('span');
       seg.className = 'inline-flex items-center gap-1';
-      seg.textContent = `${obj.coin}× ${fmt.format(v/100)} `;
-      const emoji = document.createElement('span');
-      emoji.textContent = '🟡';
-      seg.appendChild(emoji);
-      segments.push(seg);
-    }
 
-    // Rouleaux (pièces)
-    if (obj.roll) {
-      const seg = document.createElement('span');
-      seg.className = 'inline-flex items-center gap-1';
-      seg.textContent = `${obj.roll}× ${fmt.format((v*rollSize)/100)} `;
-      const emoji = document.createElement('span');
-      emoji.textContent = '🟡';
-      seg.appendChild(emoji);
+      // nombre en GRAS
+      const strong = document.createElement('strong');
+      strong.className = 'font-extrabold';
+      strong.textContent = String(obj.coin);
+
+      // contenu : **N**× 1,00 €
+      seg.appendChild(strong);
+      seg.appendChild(document.createTextNode('× ' + fmt.format(v/100) + ' '));
+
+      // emoji spécifique à la dénomination (placé juste après la valeur)
+      seg.appendChild(createDenomIcon('coin', v));
+
+      // alerte si rouleau cassé pour cette dénomination
+      const fromRoll = metaCoinsFromRoll.get(v) || 0;
+      if (fromRoll > 0) {
+        seg.appendChild(document.createTextNode(' '));
+        const warn = document.createElement('span');
+        warn.textContent = '(attention rouleau cassé)⚠️';
+        seg.appendChild(warn);
+      }
+
       segments.push(seg);
     }
 
     // Billets
-    if (obj.bill) {
+    if (type==='bill' && obj.bill) {
       const seg = document.createElement('span');
       seg.className = 'inline-flex items-center gap-1';
-      seg.textContent = `${obj.bill}× ${fmt.format(v/100)} `;
-      const emoji = document.createElement('span');
-      emoji.textContent = '💶';
-      seg.appendChild(emoji);
+
+      const strong = document.createElement('strong');
+      strong.className = 'font-extrabold';
+      strong.textContent = String(obj.bill);
+
+      seg.appendChild(strong);
+      seg.appendChild(document.createTextNode('× ' + fmt.format(v/100) + ' '));
+
+      // emoji spécifique au billet
+      seg.appendChild(createDenomIcon('bill', v));
+
       segments.push(seg);
     }
 
     if (segments.length){
       any = true;
-      // ajouter avec séparateurs " • "
       segments.forEach((seg, i) => {
         line.appendChild(seg);
         if (i < segments.length - 1){
@@ -542,6 +609,7 @@ function renderRecetteOrdered(container, map){
 
   if (!any){ container.innerHTML = '<div class="text-gray-500">—</div>'; }
 }
+
 
 // Restaurer les données si dispo
 const saved = localStorage.getItem("octocash-data");
@@ -667,22 +735,28 @@ tbody.addEventListener('click', (e) => {
     // Bouton Calculer -> ouvre la modale
     document.getElementById('btnCalculer').addEventListener('click', openModal);
 
-    function runCalculation(){
-      const inv = getInputCounts();
-      const res = calcRecette(inv, state.fondCible);
-      const resultSec = document.getElementById('resultats');
-      document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible);
+    // === 3) runCalculation (passe la méta au rendu) ===
+function runCalculation(){
+  const inv = getInputCounts();
+  const res = calcRecette(inv, state.fondCible);
+  const resultSec = document.getElementById('resultats');
+  document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible);
 
-      if (!res.ok){
-        resultSec.hidden = false;
-        document.getElementById('valRecette').textContent = res.message;
-        document.getElementById('detailRecette').innerHTML = '';
-        return;
-      }
-      document.getElementById('valRecette').textContent = centsToStr(res.recetteTotal);
-      renderRecetteOrdered(document.getElementById('detailRecette'), res.recette);
-      resultSec.hidden = false;
-    }
+  if (!res.ok){
+    resultSec.hidden = false;
+    document.getElementById('valRecette').textContent = res.message;
+    document.getElementById('detailRecette').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('valRecette').textContent = centsToStr(res.recetteTotal);
+
+  // ⬇️ on transmet la méta pour afficher “(attention rouleau cassé)⚠️” si besoin
+  renderRecetteOrdered(document.getElementById('detailRecette'), res.recette, res.metaCoinsFromRoll);
+
+  resultSec.hidden = false;
+}
+
 
     // Réinitialiser
     document.getElementById('btnReset').addEventListener('click', () => {
