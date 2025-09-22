@@ -771,6 +771,9 @@ document.getElementById('btnReset').addEventListener('click', () => {
   document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
   refreshTotals();
   document.getElementById('resultats').hidden = true;
+
+  // ✅ on supprime la dernière recette sauvegardée
+  localStorage.removeItem("octocash-last");
 });
 
 // init
