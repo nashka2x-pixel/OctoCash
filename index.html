@@ -155,7 +155,7 @@
     <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
     <th class="text-left p-2 w-[50px]  sm:w-[58px]">Rouleaux</th>
     <th class="text-center p-2 w-[86px]  sm:w-[100px]">Valeur €</th>
-    <th class="text-left p-2">Total 💰</th>
+    <th class= p-2">Total 💰</th>
   </tr>
 </thead>
 
@@ -165,7 +165,7 @@
     <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
     <td
       id="totalCaisse"
-      class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-2 sm:pr-4 text-2xl"
+      class="p-2 mono font-bold text-yellow-400 whitespace-nowrap pr-2 sm:pr-4 text-2xl"
     >
       0,00 €
     </td>
@@ -321,7 +321,7 @@ function makeRow(key, label, valueCents, hasRoll){
     </td>
     <td class="p-2 text-center font-medium">${rollsCell}</td>
     <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-  <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
+  <td class="p-2 text-center mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
 `;
  // <— IMPORTANT : on ferme la template string ici
 
