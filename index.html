@@ -280,35 +280,37 @@
     // --- Construction du tableau de saisie ---
     const tbody = document.getElementById('tbody');
     const rows = [];
-    function makeRow(key, label, valueCents, hasRoll){
-      const tr = document.createElement('tr');
-      tr.className = 'border-t border-gray-700';
+function makeRow(key, label, valueCents, hasRoll){
+  const tr = document.createElement('tr');
+  tr.className = 'border-t border-gray-700';
 
-      const rollsCell = hasRoll
-        ? `<select data-key="${key}" data-type="rolls"
-             class="appearance-none w-7 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 focus:ring-2 focus:ring-gray-500 focus:border-black">
-              ${[0,1,2,3].map(n=>`<option value="${n}">${n}</option>`).join('')}
-           </select>`
-        : `<span class="text-gray-500">—</span>`;
+  const rollsCell = hasRoll
+    ? `<select data-key="${key}" data-type="rolls"
+         class="appearance-none w-7 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 focus:ring-2 focus:ring-gray-500 focus:border-black">
+          ${[0,1,2,3].map(n=>`<option value="${n}">${n}</option>`).join('')}
+       </select>`
+    : `<span class="text-gray-500">—</span>`;
 
-      tr.innerHTML = `
-        <td class="p-2 text-center font-medium">
-          <div class="inline-flex items-center gap-1">
-            <input data-key="${key}" data-type="loose" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*"
-              class="appearance-none w-16 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-gray-500 focus:border-black text-sm"
-              value="" placeholder="0"/>
-            <button
-              class="px-2 py-1 rounded-lg border border-black bg-black text-yellow-400 hover:bg-yellow-500 hover:text-black"
-              data-plus="${key}" title="Ajouter au vrac">+</button>
-          </div>
-        </td>
-        <td class="p-2 text-center font-medium">${rollsCell}</td>
-        <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-        <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
+  tr.innerHTML = `
+    <td class="p-2 text-center font-medium">
+      <div class="inline-flex items-center gap-1">
+        <input data-key="${key}" data-type="loose" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*"
+          class="appearance-none w-16 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-gray-500 focus:border-black text-sm"
+          value="" placeholder="0"/>
+        <button
+          class="px-2 py-1 rounded-lg border border-black bg-black text-yellow-400 hover:bg-yellow-500 hover:text-black"
+          data-plus="${key}" title="Ajouter au vrac">+</button>
+      </div>
+    </td>
+    <td class="p-2 text-center font-medium">${rollsCell}</td>
+    <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
+    <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
+  `; // <— IMPORTANT : on ferme la template string ici
 
-      tbody.appendChild(tr);
-      rows.push({ key, valueCents, hasRoll });
-    }
+  tbody.appendChild(tr);
+  rows.push({ key, valueCents, hasRoll });
+}
+
 
     EURO.coins.forEach((c)=>makeRow('c'+c.value, c.label, c.value, true));
     EURO.notes.forEach((n)=>makeRow('n'+n.value, n.label, n.value, false));
