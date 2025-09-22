@@ -51,12 +51,6 @@
   #tbody input[type="number"] { width: 3.5rem; }  /* ~56px */
   #tbody select { width: 1.5rem; padding-left: .25rem; padding-right: .25rem; }
 }
-    @media (max-width: 420px){
-  table.w-full td, table.w-full th { padding: .35rem .4rem; }
-  #totalCaisse { font-size: 1.5rem; }
-  /* largeur mini sur la colonne Total */
-  thead th:last-child { width: 120px; }
-}
 
     /* Inputs numériques -> clavier numérique sur mobile et suppression du style bleu */
     input[type=number],
@@ -154,31 +148,33 @@
 
     <!-- Tableau de saisie -->
     <section class="mb-4">
-  <div class="rounded-2xl shadow-sm overflow-x-auto card">
-    <table class="w-full text-sm min-w-[420px]">
-      <thead class="text-gray-200">
-        <tr>
-          <th class="text-center p-2">Vrac 🟡</th>
-          <th class="text-left p-2">Rouleaux</th>
-          <th class="text-center p-2">Valeur €</th>
-          <th class="text-left p-2">Total 💰</th>
-        </tr>
-      </thead>
-      <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
-      <tfoot>
+      <div class="rounded-2xl shadow-sm overflow-hidden card">
+        <table class="w-full text-sm">
+          <thead class="text-gray-200">
+  <tr>
+    <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
+    <th class="text-left p-2 w-[50px]  sm:w-[58px]">Rouleaux</th>
+    <th class="text-center p-2 w-[86px]  sm:w-[100px]">Valeur €</th>
+    <th class="text-left p-2">Total 💰</th>
+  </tr>
+</thead>
+
+          <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
+          <tfoot>
   <tr>
     <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
     <td
       id="totalCaisse"
-      class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4 sm:pr-6 text-2xl"
+      class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-2 sm:pr-4 text-2xl"
     >
       0,00 €
     </td>
   </tr>
 </tfoot>
-    </table>
-  </div>
-</section>
+
+        </table>
+      </div>
+    </section>
 
 
 
@@ -325,7 +321,7 @@ function makeRow(key, label, valueCents, hasRoll){
     </td>
     <td class="p-2 text-center font-medium">${rollsCell}</td>
     <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-  <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-6 sm:pr-8" data-total="${key}">0,00 €</td>
+  <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
 `;
  // <— IMPORTANT : on ferme la template string ici
 
