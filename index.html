@@ -143,8 +143,8 @@
         <table class="w-full text-sm">
           <thead class="text-gray-200">
   <tr>
-    <th class="text-center p-2 w-[80px]">Vrac 🪙</th>
-    <th class="text-center p-2 w-[70px]">Rouleaux</th>
+    <th class="text-center p-2 w-[80px]">Vrac 🟡</th>
+    <th class="text-center p-2 w-[50px]">Rouleaux</th>
     <th class="text-center p-2 w-[90px]">Valeur €</th>
     <th class="text-right p-2">Total 💰</th>
   </tr>
@@ -304,7 +304,7 @@
         </td>
         <td class="p-2 text-center font-medium">${rollsCell}</td>
         <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-        <td class="p-2 text-right mono font-bold text-yellow-400" data-total="${key}">0,00 €</td>`;
+        <td class="p-2 text-right mono font-bold text-yellow-400 pr-4 data-total="${key}">0,00 €</td>`;
 
       tbody.appendChild(tr);
       rows.push({ key, valueCents, hasRoll });
