@@ -765,29 +765,60 @@ function runCalculation(){
 }
 
 
-// Réinitialiser
+// --- Utilitaire : restaurer la saisie depuis localStorage (octocash-data) ---
+function restoreInputsFromStorage(){
+  const saved = localStorage.getItem("octocash-data");
+  if (!saved) return;
+  try {
+    const inv = new Map(Object.entries(JSON.parse(saved)).map(([k,v]) => [Number(k), v]));
+    rows.forEach(r => {
+      const entry = inv.get(r.valueCents);
+      if (!entry) return;
+      const input = document.querySelector(`input[data-key="${r.key}"][data-type="loose"]`);
+      if (input) input.value = entry.loose ?? "";
+      if (r.hasRoll) {
+        const select = document.querySelector(`select[data-key="${r.key}"][data-type="rolls"]`);
+        if (select) select.value = String(entry.rolls ?? 0);
+      }
+    });
+  } catch(e){
+    console.warn("Erreur restauration saisie (octocash-data)", e);
+  }
+}
+
+// Réinitialiser (tout remettre à zéro ET ne rien recharger au prochain démarrage)
 document.getElementById('btnReset').addEventListener('click', () => {
+  // vider les champs visuellement
   document.querySelectorAll('#tbody input').forEach(i => i.value = '');
   document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
-  refreshTotals();
-  document.getElementById('resultats').hidden = true;
 
-  // ✅ on supprime la dernière recette sauvegardée
+  // recalculer et écraser octocash-data avec un état vide
+  refreshTotals();
+
+  // cacher les résultats et supprimer la dernière recette sauvegardée
+  document.getElementById('resultats').hidden = true;
   localStorage.removeItem("octocash-last");
 });
 
-// init
+// =========================
+// ========= INIT =========
+// =========================
+
+// 1) remettre la saisie (pièces/billets + rouleaux)
+restoreInputsFromStorage();
+
+// 2) recalculer les totaux (met aussi à jour octocash-data)
 refreshTotals();
 
-// ✅ Restauration du dernier calcul (détail recette + fond choisi)
-(function restoreLastCalc(){
+// 3) réafficher le DERNIER détail recette (si présent)
+;(function restoreLastCalc(){
   const raw = localStorage.getItem("octocash-last");
   if (!raw) return;
   try {
     const data = JSON.parse(raw);
     if (typeof data.fondCible === 'number') state.fondCible = data.fondCible;
 
-    const recetteMap = new Map(data.recette || []);                       // Array -> Map
+    const recetteMap = new Map(data.recette || []);            // Array -> Map
     const metaCoinsFromRoll = new Map(data.metaCoinsFromRoll || []);
 
     document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible || 0);
@@ -798,6 +829,7 @@ refreshTotals();
     console.warn("Erreur restauration dernier calcul", e);
   }
 })();
+
 
   </script>
 </body>
