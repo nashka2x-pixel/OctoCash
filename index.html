@@ -635,10 +635,13 @@ if (saved) {
   const inv = getInputCounts();
   computeTotals(inv);
 
-  // Sauvegarde dans localStorage
-  localStorage.setItem("octocash-data", JSON.stringify(Object.fromEntries(inv)));
+ // ✅ Sauvegarde compacte : on n'enregistre que les cases non vides
+  const compact = {};
+  inv.forEach((e, v) => {
+    if ((e.loose||0) > 0 || (e.rolls||0) > 0) compact[v] = e;
+  });
+  localStorage.setItem("octocash-data", JSON.stringify(compact));
 }
-
     // Recalcul en live
     tbody.addEventListener('input', refreshTotals);
     tbody.addEventListener('change', refreshTotals);
