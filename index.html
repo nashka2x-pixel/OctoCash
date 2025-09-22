@@ -162,15 +162,15 @@
           <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
           <tfoot>
   <tr>
-    <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
-    <td
-      id="totalCaisse"
-      class="p-2 mono font-bold text-yellow-400 whitespace-nowrap pr-2 sm:pr-4 text-2xl"
-    >
-      0,00 €
+    <td colspan="4" class="p-3 text-center">
+      <span class="text-lg font-semibold text-gray-200 mr-2">Total caisse :</span>
+      <span id="totalCaisse" class="mono font-bold text-yellow-400 text-2xl">
+        0,00 €
+      </span>
     </td>
   </tr>
 </tfoot>
+
 
         </table>
       </div>
@@ -575,7 +575,7 @@ if (saved) {
     tbody.addEventListener('input', refreshTotals);
     tbody.addEventListener('change', refreshTotals);
 
-    // Boutons "+" pour ajouter au vrac
+    // Boutons "+" -> fenêtre de saisie et addition au vrac
 tbody.addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-plus]');
   if (!btn) return;
@@ -584,13 +584,34 @@ tbody.addEventListener('click', (e) => {
   const input = document.querySelector(`input[data-key="${key}"][data-type="loose"]`);
   if (!input) return;
 
-  // Focus (ouvre le clavier numérique sur mobile)
-  input.focus();
+  // Récupère l’intitulé (ex: "2 €", "10 c", etc.) pour l’afficher dans le prompt
+  const labelCell = btn.closest('tr')?.querySelector('td:nth-child(3)');
+  const denomText = labelCell ? labelCell.textContent.trim() : '';
 
-  // Optionnel: place le curseur à la fin de la valeur existante
-  const val = input.value;
-  input.value = '';
-  input.value = val;
+  // Demande combien ajouter (entier)
+  let q = prompt(`Ajouter combien de ${denomText} ?`);
+
+  if (q === null) return; // Annulé
+
+  // Convertit "2,5" -> 2 (entier, pas de décimales pour un nombre de pièces/billets)
+  q = String(q).replace(',', '.');
+  const add = Math.floor(Number(q));
+
+  if (!Number.isFinite(add) || add <= 0) {
+    // Valeur invalide -> on ne fait rien
+    return;
+  }
+
+  const current = Math.floor(Number(input.value || 0)) || 0;
+  input.value = String(current + add);
+
+  // Recalcule et garde une UX agréable
+  refreshTotals();
+  input.focus();
+  try { // place le curseur en fin si supporté
+    const len = input.value.length;
+    input.setSelectionRange(len, len);
+  } catch {}
 });
 
 
