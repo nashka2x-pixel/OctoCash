@@ -154,33 +154,29 @@
 
     <!-- Tableau de saisie -->
     <section class="mb-4">
-  <div class="rounded-2xl shadow-sm card"> <!-- plus d'overflow-hidden ici -->
-    <div class="overflow-x-auto rounded-2xl">  <!-- nouveau wrapper scroll -->
-      <table class="w-full text-sm table-auto">
-        <thead class="text-gray-200">
-          <tr>
-            <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
-            <th class="text-left p-2 w-[50px] sm:w-[58px]">Rouleaux</th>
-            <th class="text-center p-2 w-[86px] sm:w-[100px]">Valeur €</th>
-            <!-- on force une largeur mini à la colonne Total -->
-            <th class="text-left p-2 w-[128px] sm:w-[152px]">Total 💰</th>
-          </tr>
-        </thead>
-
-        <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
-            <td
-              id="totalCaisse"
-              class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-6 sm:pr-8 text-2xl"
-            >0,00 €</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+  <div class="rounded-2xl shadow-sm overflow-x-auto card">
+    <table class="w-full text-sm min-w-[420px]">
+      <thead class="text-gray-200">
+        <tr>
+          <th class="text-center p-2">Vrac 🟡</th>
+          <th class="text-left p-2">Rouleaux</th>
+          <th class="text-center p-2">Valeur €</th>
+          <th class="text-left p-2">Total 💰</th>
+        </tr>
+      </thead>
+      <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
+          <td id="totalCaisse" class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap text-2xl">
+            0,00 €
+          </td>
+        </tr>
+      </tfoot>
+    </table>
   </div>
 </section>
+
 
 
     <!-- Actions principales -->
