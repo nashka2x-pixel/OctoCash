@@ -149,8 +149,8 @@
 
     <!-- Tableau de saisie -->
     <section class="mb-4">
-      <div class="rounded-2xl shadow-sm overflow-hidden card">
-        <table class="w-full text-sm">
+      <div class="rounded-2xl shadow-sm overflow-visible sm:overflow-hidden card">
+  <table class="w-full text-sm">
           <thead class="text-gray-200">
   <tr>
     <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
@@ -163,11 +163,11 @@
 
           <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
           <tfoot>
-            <tr>
-              <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
-              <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-2 sm:pr-4 inline-block" data-total="${key}">0,00 €</td>
-
-          </tfoot>
+  <tr>
+    <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
+    <td class="p-2 pr-3 text-right mono font-extrabold text-yellow-400 text-2xl" id="totalCaisse">0,00 €</td>
+  </tr>
+</tfoot>
         </table>
       </div>
     </section>
