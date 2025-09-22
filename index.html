@@ -535,20 +535,23 @@ function renderRecetteOrdered(container, map){
     tbody.addEventListener('change', refreshTotals);
 
     // Boutons "+" pour ajouter au vrac
-    tbody.addEventListener('click', (e)=>{
-      const btn = e.target.closest('button[data-plus]');
-      if (!btn) return;
-      const key = btn.dataset.plus;
-      const input = document.querySelector(`input[data-key="${key}"][data-type="loose"]`);
-      const current = Number(input.value || 0);
-      const addStr = prompt('Ajouter au vrac (quantité à ajouter) :', '1');
-      if (addStr === null) return;
-      const add = Number(String(addStr).replace(',', '.'));
-      if (isNaN(add)) return;
-      const next = Math.max(0, Math.floor(current + add));
-      input.value = String(next);
-      refreshTotals();
-    });
+tbody.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-plus]');
+  if (!btn) return;
+
+  const key = btn.dataset.plus;
+  const input = document.querySelector(`input[data-key="${key}"][data-type="loose"]`);
+  if (!input) return;
+
+  // Focus (ouvre le clavier numérique sur mobile)
+  input.focus();
+
+  // Optionnel: place le curseur à la fin de la valeur existante
+  const val = input.value;
+  input.value = '';
+  input.value = val;
+});
+
 
     // --- Modale fond ---
     const modal = document.getElementById('fondModal');
