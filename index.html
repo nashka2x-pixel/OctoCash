@@ -568,7 +568,7 @@ function renderRecetteOrdered(container, map, metaCoinsFromRoll = new Map()){
       if (fromRoll > 0) {
         seg.appendChild(document.createTextNode(' '));
         const warn = document.createElement('span');
-        warn.textContent = '(attention rouleau cassé)⚠️';
+        warn.textContent = '(⚠️ Rouleau cassé)';
         seg.appendChild(warn);
       }
 
@@ -735,7 +735,6 @@ tbody.addEventListener('click', (e) => {
     // Bouton Calculer -> ouvre la modale
     document.getElementById('btnCalculer').addEventListener('click', openModal);
 
-    // === 3) runCalculation (passe la méta au rendu) ===
 function runCalculation(){
   const inv = getInputCounts();
   const res = calcRecette(inv, state.fondCible);
@@ -755,19 +754,48 @@ function runCalculation(){
   renderRecetteOrdered(document.getElementById('detailRecette'), res.recette, res.metaCoinsFromRoll);
 
   resultSec.hidden = false;
+
+  // ✅ Sauvegarder le dernier calcul (pour réouverture)
+  localStorage.setItem("octocash-last", JSON.stringify({
+    fondCible: state.fondCible,                                  // en centimes
+    recette: Array.from(res.recette.entries()),                  // Map -> Array
+    metaCoinsFromRoll: Array.from(res.metaCoinsFromRoll.entries()),
+    recetteTotal: res.recetteTotal                               // en centimes
+  }));
 }
 
 
-    // Réinitialiser
-    document.getElementById('btnReset').addEventListener('click', () => {
-      document.querySelectorAll('#tbody input').forEach(i => i.value = '');
-      document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
-      refreshTotals();
-      document.getElementById('resultats').hidden = true;
-    });
+// Réinitialiser
+document.getElementById('btnReset').addEventListener('click', () => {
+  document.querySelectorAll('#tbody input').forEach(i => i.value = '');
+  document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
+  refreshTotals();
+  document.getElementById('resultats').hidden = true;
+});
 
-    // init
-    refreshTotals();
+// init
+refreshTotals();
+
+// ✅ Restauration du dernier calcul (détail recette + fond choisi)
+(function restoreLastCalc(){
+  const raw = localStorage.getItem("octocash-last");
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    if (typeof data.fondCible === 'number') state.fondCible = data.fondCible;
+
+    const recetteMap = new Map(data.recette || []);                       // Array -> Map
+    const metaCoinsFromRoll = new Map(data.metaCoinsFromRoll || []);
+
+    document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible || 0);
+    document.getElementById('valRecette').textContent = centsToStr(data.recetteTotal || 0);
+    renderRecetteOrdered(document.getElementById('detailRecette'), recetteMap, metaCoinsFromRoll);
+    document.getElementById('resultats').hidden = false;
+  } catch (e) {
+    console.warn("Erreur restauration dernier calcul", e);
+  }
+})();
+
   </script>
 </body>
 </html>
