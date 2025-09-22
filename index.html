@@ -42,8 +42,7 @@
     @media (max-width: 640px){
       body::before { position: absolute; }
     }
-
-    @media (max-width: 420px){
+@media (max-width: 420px){
   /* compacter le tableau */
   table.w-full td, table.w-full th { padding: .35rem .4rem; }
   /* réduire un poil la taille du total pour éviter les coupes */
@@ -52,7 +51,6 @@
   #tbody input[type="number"] { width: 3.5rem; }  /* ~56px */
   #tbody select { width: 1.5rem; padding-left: .25rem; padding-right: .25rem; }
 }
-
     /* Inputs numériques -> clavier numérique sur mobile et suppression du style bleu */
     input[type=number],
     select {
@@ -149,8 +147,8 @@
 
     <!-- Tableau de saisie -->
     <section class="mb-4">
-      <div class="rounded-2xl shadow-sm overflow-visible sm:overflow-hidden card">
-  <table class="w-full text-sm">
+      <div class="rounded-2xl shadow-sm overflow-hidden card">
+        <table class="w-full text-sm">
           <thead class="text-gray-200">
   <tr>
     <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
@@ -160,14 +158,13 @@
   </tr>
 </thead>
 
-
           <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
           <tfoot>
-  <tr>
-    <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
-    <td class="p-2 pr-3 text-right mono font-extrabold text-yellow-400 text-2xl" id="totalCaisse">0,00 €</td>
-  </tr>
-</tfoot>
+            <tr>
+              <td colspan="3" class="p-2 text-lg font-semibold text-gray-200">Total caisse :</td>
+              <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-2 sm:pr-4 inline-block" data-total="${key}">0,00 €</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
     </section>
@@ -259,12 +256,12 @@
     // --- Modèle des dénominations (centimes) ---
     const EURO = {
   coins: [
-    { value: 1,   label: '<span class="whitespace-nowrap"><span class="text-[10px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">1 c</span></span>', roll: 50 },
-    { value: 2,   label: '<span class="whitespace-nowrap"><span class="text-[11px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">2 c</span></span>', roll: 50 },
-    { value: 5,   label: '<span class="whitespace-nowrap"><span class="text-xs">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">5 c</span></span>', roll: 50 },
-    { value: 10,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-sm">🟡</span><span class="text-[13px] font-medium align-middle">10 c</span></span>', roll: 40 },
-    { value: 20,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-base">🟡</span><span class="text-[13px] font-medium align-middle">20 c</span></span>', roll: 40 },
-    { value: 50,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-lg">🟡</span><span class="text-[13px] font-medium align-middle">50 c</span></span>', roll: 40 },
+    { value: 1,   label: '<span class="whitespace-nowrap"><span class="text-[10px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">1 cent</span></span>', roll: 50 },
+    { value: 2,   label: '<span class="whitespace-nowrap"><span class="text-[11px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">2 cents</span></span>', roll: 50 },
+    { value: 5,   label: '<span class="whitespace-nowrap"><span class="text-xs">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">5 cents</span></span>', roll: 50 },
+    { value: 10,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-sm">🟡</span><span class="text-[13px] font-medium align-middle">10 cents</span></span>', roll: 40 },
+    { value: 20,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-base">🟡</span><span class="text-[13px] font-medium align-middle">20 cents</span></span>', roll: 40 },
+    { value: 50,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-lg">🟡</span><span class="text-[13px] font-medium align-middle">50 cents</span></span>', roll: 40 },
     { value: 100, label: '<span class="whitespace-nowrap"><span class="text-lg">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">1 €</span></span>', roll: 25 },
     { value: 200, label: '<span class="whitespace-nowrap"><span class="text-xl">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">2 €</span></span>', roll: 25 },
   ],
@@ -315,7 +312,7 @@ function makeRow(key, label, valueCents, hasRoll){
     </td>
     <td class="p-2 text-center font-medium">${rollsCell}</td>
     <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-    <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4 d-inline-block" data-total="${key}">0,00 €</td>
+    <td class="p-2 text-right mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
   `; // <— IMPORTANT : on ferme la template string ici
 
   tbody.appendChild(tr);
