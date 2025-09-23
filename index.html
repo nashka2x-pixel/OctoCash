@@ -456,6 +456,109 @@ function calcRecette(inv, fondCible){
     else                                    takeCoinFromRoll.set(d, (takeCoinFromRoll.get(d)||0) + ch.trace.take);
     cur = prev[cur];
   }
+    // === CAP STRICT + RECOMPLÉTION ===
+  // 1) plafonner les billets au stock saisi
+  const stockBills = new Map();
+  EURO.notes.forEach(n => {
+    const v = n.value;
+    stockBills.set(v, (inv.get(v)?.loose|0));
+  });
+
+  // calc de la somme "prise" actuelle et déficit éventuel dû au cap
+  let takenCents = 0;
+  EURO.notes.forEach(n => {
+    const v = n.value;
+    const want = (takeBill.get(v)||0);
+    const have = stockBills.get(v)||0;
+    const keep = Math.min(want, have);
+    if (keep !== want) takeBill.set(v, keep); // cap
+    takenCents += keep * v;
+  });
+  EURO.coins.forEach(c => {
+    const v = c.value;
+    takenCents += ((takeCoinLoose.get(v)||0) + (takeCoinFromRoll.get(v)||0)) * v;
+  });
+
+  // montant restant à atteindre
+  let rest = toRecipe - takenCents;
+  if (rest < 0) rest = 0;
+
+  // 2) catalogue de complétion : billets restants, pièces vrac, pièces depuis rouleaux
+  const completion = [];
+
+  // billets restants (gros -> petit)
+  EURO.notes.slice().sort((a,b)=>b.value-a.value).forEach(n=>{
+    const v = n.value;
+    const used = takeBill.get(v)||0;
+    const max = (stockBills.get(v)||0) - used;
+    if (max > 0) completion.push({value:v, count:max, bucket:'bill'});
+  });
+  // pièces vrac (gros -> petit)
+  EURO.coins.slice().sort((a,b)=>b.value-a.value).forEach(c=>{
+    const v = c.value;
+    const have = inv.get(v)?.loose|0;
+    const used = takeCoinLoose.get(v)||0;
+    const max = have - used;
+    if (max > 0) completion.push({value:v, count:max, bucket:'coinLoose'});
+  });
+  // pièces issues de rouleaux (gros -> petit)
+  EURO.coins.slice().sort((a,b)=>b.value-a.value).forEach(c=>{
+    const v = c.value;
+    const e = inv.get(v) || {rolls:0, rollSize:c.roll};
+    const have = (e.rolls|0) * (e.rollSize||c.roll);
+    const used = takeCoinFromRoll.get(v)||0;
+    const max = have - used;
+    if (max > 0) completion.push({value:v, count:max, bucket:'coinFromRoll'});
+  });
+
+  // 3) petit DP borné pour compléter "rest"
+  if (rest > 0){
+    const R2 = rest;
+    const INF = 1e15;
+    let dp2 = Array(R2+1).fill(INF); dp2[0]=0;
+    const choose = completion.map(()=>Array(R2+1).fill(0));
+    const baseCost = b => b==='bill'?800:(b==='coinLoose'?2000:4000);
+
+    for (let i=0;i<completion.length;i++){
+      const {value, count, bucket} = completion[i];
+      const cost = baseCost(bucket) - 0.01*value;
+      const ndp = dp2.slice();
+      const nchoose = Array(R2+1).fill(0);
+      for (let a=0;a<=R2;a++){
+        let best = dp2[a], bestm=0;
+        for (let m=1;m<=count;m++){
+          const p=a-m*value; if(p<0)break;
+          const cand = dp2[p] + m*cost;
+          if (cand < best){ best=cand; bestm=m; }
+        }
+        ndp[a]=best; nchoose[a]=bestm;
+      }
+      // propager les choix
+      const newChoose = completion.map((_,k)=>Array(R2+1).fill(0));
+      for (let a=0;a<=R2;a++){
+        if (!isFinite(ndp[a])) continue;
+        const m = nchoose[a];
+        const p = a - m*value;
+        for (let k=0;k<i;k++) newChoose[k][a] = choose[k][p];
+        newChoose[i][a] = m;
+      }
+      dp2 = ndp;
+      for (let k=0;k<=i;k++) choose[k] = newChoose[k];
+    }
+
+    if (isFinite(dp2[R2])){
+      for (let i=0;i<completion.length;i++){
+        const m = choose[i][R2]||0;
+        if (!m) continue;
+        const {value, bucket} = completion[i];
+        if (bucket==='bill')          takeBill.set(value, (takeBill.get(value)||0) + m);
+        else if (bucket==='coinLoose') takeCoinLoose.set(value, (takeCoinLoose.get(value)||0) + m);
+        else                           takeCoinFromRoll.set(value, (takeCoinFromRoll.get(value)||0) + m);
+      }
+      rest = 0;
+    }
+  }
+
 
   // Sortie "recette" pour le rendu (pièces/billets uniquement, jamais “1× 25 €”)
   const recetteMap = new Map();
@@ -635,13 +738,20 @@ if (saved) {
   const inv = getInputCounts();
   computeTotals(inv);
 
- // ✅ Sauvegarde compacte : on n'enregistre que les cases non vides
+  // ✅ Sauvegarde compacte
   const compact = {};
   inv.forEach((e, v) => {
     if ((e.loose||0) > 0 || (e.rolls||0) > 0) compact[v] = e;
   });
   localStorage.setItem("octocash-data", JSON.stringify(compact));
+
+  // 🔄 Recalcul auto si la recette est affichée
+  const resultSec = document.getElementById('resultats');
+  if (!resultSec.hidden) {
+    runCalculation();
+  }
 }
+
     // Recalcul en live
     tbody.addEventListener('input', refreshTotals);
     tbody.addEventListener('change', refreshTotals);
