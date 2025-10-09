@@ -671,7 +671,7 @@
         { name:'Première Envol Fixe', code:'3120', aliases:['PE','Première Envol'] },
 
         { name:"4D DECT", code:'3133', aliases:['4D','Reveil'] },
-        { name:"4D Fixe", code:'3122', aliases:['4D','Reveil','PE'] },
+        { name:"4D Fixe", code:'3122', aliases:['4D','Reveil'] },
 
         { name:'Terre en Colère', code:'3117', aliases:['TC'] },
 
@@ -697,50 +697,89 @@
 
       const codesOf = it => Array.isArray(it.code) ? it.code.map(String) : [String(it.code)];
 
-      function matches(it, qRaw){
-        const q = norm(qRaw);
-        if (!q) return true;
-        const hay = [
-          norm(it.name),
-          ...(it.aliases||[]).map(norm),
-          ...codesOf(it) // recherche directe sur les chiffres
-        ];
-        return hay.some(h => h.includes(q));
-      }
+      ffunction matches(it, qRaw){
+  const q = norm(qRaw);
+  if (!q) return true;
+  const boundary = new RegExp(`(?:^|[^a-z0-9])${q}`);
+  const inName   = boundary.test(norm(it.name));
+  const inAlias  = (it.aliases||[]).map(norm).some(a => boundary.test(a));
+  const inCode   = codesOf(it).some(c => c.includes(qRaw));
+  return inName || inAlias || inCode;
+}
 
-      function render(q=''){
-        const rows = DIRECTORY
-          .slice()
-          .sort((a,b)=> norm(a.name).localeCompare(norm(b.name)))
-          .filter(it => matches(it, q));
+// --- Helpers (NOUVEAU) ---
+const tokenize = s => norm(s).split(/[^a-z0-9]+/).filter(Boolean);
+const codesOf = it => Array.isArray(it.code) ? it.code.map(String) : [String(it.code)];
 
-        if (!rows.length){
-          $list.innerHTML = '<div class="p-4 text-center text-gray-400">Aucun résultat</div>';
-          return;
-        }
+// Calcule un score de pertinence (plus haut = mieux)
+function scoreRow(it, qRaw){
+  const q = norm(qRaw).trim();
+  if (!q) return 1; // pas de recherche => tout passe
 
-        $list.innerHTML = rows.map(it => {
-          const codes = codesOf(it);
-          const codeText = codes.join(' / ');
-          const aliases = it.aliases && it.aliases.length
-            ? `<span class="ml-1 text-[10px] text-gray-500">(${esc(it.aliases.join(', '))})</span>`
-            : '';
+  const nameNorm = norm(it.name);
+  const nameTokens = tokenize(it.name);
+  const aliases = (it.aliases || []).map(norm);
+  const codes = codesOf(it);
 
-          /* Ligne en flex: nom à gauche (wrap), numéro à droite (badge or non cassé) */
-          return `
-            <div class="p-3 hover:bg-gray-800/60 flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <div class="font-semibold text-gray-100 break-words">
-                  ${esc(it.name)}${aliases}
-                </div>
-              </div>
-              <div class="shrink-0">
-                <span class="num-badge text-base md:text-lg">${esc(codeText)}</span>
-              </div>
+  // 1) Match exact du code (ex: "3123")
+  if (codes.some(c => c === qRaw.trim())) return 100;
+
+  // 2) Alias EXACT (ex: "DR")
+  if (aliases.includes(q)) return 95;
+
+  // 3) Alias qui commence par la requête (ex: "dr" → "Dragon Ride")
+  if (aliases.some(a => a.startsWith(q))) return 90;
+
+  // 4) Mot complet du nom (début/entier)
+  if (nameTokens.includes(q)) return 80;
+  if (nameTokens.some(t => t.startsWith(q))) return 70;
+
+  // 5) Code qui contient la requête (ex: "31" → "3123")
+  if (codes.some(c => c.includes(qRaw))) return 60;
+
+  // 6) Inclus dans le nom (fallback faible pour éviter "sanDRine")
+  if (nameNorm.includes(q)) return 10;
+
+  return 0;
+}
+      
+// --- Rendu avec tri par score (REMPLACE render() et matches()) ---
+function render(q=''){
+  // Choisis un seuil minimal. 10 garde les inclusions "faibles".
+  // Passe-le à 60 si tu veux virer les faux positifs agressivement.
+  const MIN_SCORE = 10;
+
+  const rows = DIRECTORY
+    .map(it => ({ it, s: scoreRow(it, q) }))
+    .filter(x => x.s >= MIN_SCORE)
+    .sort((a,b) => {
+      if (b.s !== a.s) return b.s - a.s;                 // score décroissant
+      return norm(a.it.name).localeCompare(norm(b.it.name)); // tie-break alpha
+    })
+    .map(({it}) => {
+      const codes = codesOf(it);
+      const codeText = codes.join(' / ');
+      const aliases = it.aliases && it.aliases.length
+        ? `<span class="ml-1 text-[10px] text-gray-500">(${esc(it.aliases.join(', '))})</span>`
+        : '';
+      return `
+        <div class="p-3 hover:bg-gray-800/60 flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-semibold text-gray-100 break-words">
+              ${esc(it.name)}${aliases}
             </div>
-          `;
-        }).join('');
-      }
+          </div>
+          <div class="shrink-0">
+            <span class="num-badge text-base md:text-lg">${esc(codeText)}</span>
+          </div>
+        </div>
+      `;
+    });
+
+  $list.innerHTML = rows.length
+    ? rows.join('')
+    : '<div class="p-4 text-center text-gray-400">Aucun résultat</div>';
+}
 
       $search.addEventListener('input', e=> render(e.target.value));
 
