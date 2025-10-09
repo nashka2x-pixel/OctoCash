@@ -1,334 +1,322 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OctoCash</title>
+  <title>OctoSuite (OctoCash + OctoLine)</title>
 
   <!-- Icône et manifest -->
   <link rel="icon" type="image/png" href="https://i.postimg.cc/W42shZTD/Chat-GPT-Image-22-sept-2025-19-00-20.png">
-<link rel="apple-touch-icon" href="https://i.postimg.cc/W42shZTD/Chat-GPT-Image-22-sept-2025-19-00-20.png">
-<meta name="apple-mobile-web-app-title" content="OctoCash">
-<meta name="application-name" content="OctoCash">
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/W42shZTD/Chat-GPT-Image-22-sept-2025-19-00-20.png">
+  <meta name="apple-mobile-web-app-title" content="OctoSuite">
+  <meta name="application-name" content="OctoSuite">
 
+  <!-- Tailwind via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    /* === Fond tentacules (gris sombre + or) === */
-    :root {
-      --bg-url: url('https://i.postimg.cc/fbwbZdVb/Chat-GPT-Image-22-sept-2025-14-08-38.png');
-      --gold: #ffd166; /* accent or */
-    }
-
+    :root { --bg-url: url('https://i.postimg.cc/fbwbZdVb/Chat-GPT-Image-22-sept-2025-14-08-38.png'); --gold:#ffd166; }
     html, body { height: 100%; }
+    body { background:#111; color:#f1f1f1; position:relative; overflow-x:hidden; }
+    body::before{ content:""; position:fixed; inset:0; background-image:
+        linear-gradient(to bottom, rgba(0,0,0,.3), rgba(0,0,0,.6)), var(--bg-url);
+      background-size:cover; background-position:center top; background-repeat:no-repeat; z-index:-1; }
+    @media (max-width:640px){ body::before{ position:absolute; } }
+    @media (max-width:420px){
+      table.w-full td, table.w-full th { padding:.35rem .4rem; }
+      #totalCaisse{ font-size:1.5rem; }
+      #tbody input[type="number"]{ width:3.5rem; }
+      #tbody select{ width:1.5rem; padding-left:.25rem; padding-right:.25rem; }
+    }
 
-    body {
-      background: #111;
-      color: #f1f1f1;
-      position: relative;
-      overflow-x: hidden;
+    /* Inputs (pas de halo bleu) */
+    input[type=number], select{
+      -webkit-appearance:none; -moz-appearance:none; appearance:none;
+      background:#0a0a0a!important; color:#f1f1f1!important; border:1px solid #000!important;
+      box-shadow:none!important; outline:none;
     }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(to bottom, rgba(0,0,0,.3), rgba(0,0,0,.6)),
-        var(--bg-url);
-      background-size: cover;
-      background-position: center top;
-      background-repeat: no-repeat;
-      z-index: -1;
-    }
-    @media (max-width: 640px){
-      body::before { position: absolute; }
-    }
-@media (max-width: 420px){
-  /* compacter le tableau */
-  table.w-full td, table.w-full th { padding: .35rem .4rem; }
-  /* réduire un poil la taille du total pour éviter les coupes */
-  #totalCaisse { font-size: 1.5rem; } /* avant: text-2xl ~1.5rem, ajuste si besoin */
-  /* inputs + select un peu plus étroits */
-  #tbody input[type="number"] { width: 3.5rem; }  /* ~56px */
-  #tbody select { width: 1.5rem; padding-left: .25rem; padding-right: .25rem; }
-}
-
-    /* Inputs numériques -> clavier numérique sur mobile et suppression du style bleu */
-    input[type=number],
-    select {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      background-color: #0a0a0a !important;
-      color: #f1f1f1 !important;
-      border: 1px solid #000 !important;
-      box-shadow: none !important;
-      outline: none;
-    }
-    /* Supprimer les flèches ↑↓ des input number */
     input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+    input[type=number]{ -moz-appearance:textfield; }
+    input, select, textarea{ font-size:16px!important; } /* iOS: pas de zoom */
 
-    /* Utilitaires */
-    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .sticky-cta { position: sticky; bottom: 0; background: rgba(24,24,24,0.95); padding: .5rem; border-top: 1px solid rgba(120,120,120,.35); backdrop-filter: blur(6px); }
+    .mono{ font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .sticky-cta{ position:sticky; bottom:0; background:rgba(24,24,24,.95); padding:.5rem; border-top:1px solid rgba(120,120,120,.35); backdrop-filter:blur(6px); }
+    #totalCaisse{ color:var(--gold); text-shadow:0 0 6px rgba(255,210,80,.25); }
+    [data-total]{ font-weight:700; color:var(--gold); }
+    table thead{ background:rgba(75,75,75,.9); } table tfoot{ background:rgba(45,45,45,.9); }
+    .card{ background:rgba(32,32,32,.85); border:1px solid rgba(120,120,120,.45); }
 
-    /* Mise en avant des totaux */
-    #totalCaisse { color: var(--gold); text-shadow: 0 0 6px rgba(255,210,80,.25); }
-    [data-total] { font-weight: 700; color: var(--gold); }
+    /* Radios fond */
+    .radio-gold{ appearance:none; width:1.25rem; height:1.25rem; border-radius:9999px; border:2px solid #bbb; background:#333; cursor:pointer; }
+    .radio-gold:checked{ background:var(--gold); border-color:var(--gold); }
+    #fondCancel{ background:#1f1f1f!important; color:#e5e5e5!important; border:1px solid #444!important; }
+    #fondCancel:hover{ background:#333!important; }
+    #fondModal, #fondModal *{ -webkit-tap-highlight-color:transparent; }
+    #fondModal label{ user-select:none; background:rgba(0,0,0,.20)!important; border-color:#565656!important; transition:background-color .15s, border-color .15s, box-shadow .15s; }
+    #fondModal label:hover{ background:#2b2b2b!important; border-color:#6b6b6b!important; }
+    #fondModal input[type="radio"].radio-gold:focus{ outline:none!important; box-shadow:0 0 0 2px rgba(255,209,102,.25); border-radius:9999px; }
+    #fondModal label:has(.radio-gold:checked){ background:#1f1a12!important; border-color:#b08900!important; box-shadow:0 0 0 2px rgba(255,209,102,.30); }
+    #fondModal ::selection{ background:rgba(255,209,102,.28); color:#fff; }
 
-    /* Tables/cards en gris neutre */
-    table thead { background: rgba(75,75,75,.9); }
-    table tfoot { background: rgba(45,45,45,.9); }
-    .card { background: rgba(32,32,32,.85); border: 1px solid rgba(120,120,120,.45); }
+    .signature{ margin:2rem auto 1.5rem; display:flex; align-items:center; justify-content:center; gap:.6rem; color:#e5e5e5; opacity:.85; font-weight:600; }
 
-    /* Radios custom or, sans bleu */
-    .radio-gold {
-      appearance: none; -webkit-appearance: none; -moz-appearance: none;
-      width: 1.25rem; height: 1.25rem; border-radius: 9999px;
-      border: 2px solid #bbb;
-      background-color: #333;
-      cursor: pointer; position: relative; display: inline-block;
+    /* Onglets */
+    .octo-tab{ position:relative; }
+    .octo-tab.active::after{ content:""; position:absolute; left:50%; transform:translateX(-50%); bottom:-8px; width:18px; height:3px; border-radius:9999px; background:var(--gold); }
+
+    /* OctoLine: champ de recherche sombre, pas de halo bleu */
+    .ol-input{
+      background:#1f1f1f!important; border-color:#414141!important; color:#f1f1f1!important;
+      outline:none!important; box-shadow:none!important;
     }
-    .radio-gold:checked {
-      background-color: #ffd166;
-      border-color: #ffd166;
+    .ol-input:focus{
+      border-color:#5b5b5b!important; box-shadow:0 0 0 2px rgba(255,209,102,.15)!important;
     }
 
-    #fondCancel {
-      background-color: #1f1f1f !important;
-      color: #e5e5e5 !important;
-      border: 1px solid #444 !important;
+    /* Badge numéro (pavé or identique à l'app) */
+    .num-badge{
+      display:inline-block;
+      background: var(--gold);
+      color:#111;
+      font-weight:800;
+      padding:.35rem .6rem;
+      border-radius:.5rem;
+      line-height:1;
+      letter-spacing:.2px;
+      white-space:nowrap; /* le numéro ne se casse pas */
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 1px 6px rgba(0,0,0,.25);
     }
-    #fondCancel:hover { background-color: #333 !important; }
-
-    /* Radios + labels du modal : pas de bleu, style dark+or */
-    #fondModal, #fondModal * { -webkit-tap-highlight-color: transparent; }
-    #fondModal label { user-select: none; }
-    #fondModal label {
-      background-color: rgba(0,0,0,.20) !important;
-      border-color: #565656 !important;
-      transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
-    }
-    #fondModal label:hover {
-      background-color: #2b2b2b !important;
-      border-color: #6b6b6b !important;
-    }
-    #fondModal input[type="radio"].radio-gold:focus {
-      outline: none !important;
-      box-shadow: 0 0 0 2px rgba(255,209,102,.25);
-      border-radius: 9999px;
-    }
-    #fondModal label:has(.radio-gold:checked) {
-      background-color: #1f1a12 !important;
-      border-color: #b08900 !important;
-      box-shadow: 0 0 0 2px rgba(255,209,102,.30);
-    }
-    #fondModal ::selection { background: rgba(255,209,102,.28); color: #fff; }
-
-    /* Signature */
-    .signature {
-      margin: 2rem auto 1.5rem;
-      display: flex; align-items: center; justify-content: center; gap: .6rem;
-      color: #e5e5e5; opacity: .85; font-weight: 600;
-    }
-    .signature svg { width: 18px; height: 18px; display: inline-block; }
-
-/* Empêche le zoom automatique sur iOS quand on clique sur un input */
-  input,
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
   </style>
 </head>
 <body class="min-h-screen text-gray-100">
-  <div class="max-w-md mx-auto p-4 pb-28">
-    <!-- (Titres supprimés comme demandé) -->
 
-    <!-- Tableau de saisie -->
-    <section class="mb-4">
-      <div class="rounded-2xl shadow-sm overflow-hidden card">
-        <table class="w-full text-sm">
-          <thead class="text-gray-200">
-  <tr>
-    <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
-    <th class="text-left p-2 w-[50px]  sm:w-[58px]">Rouleaux</th>
-    <th class="text-center p-2 w-[86px]  sm:w-[100px]">Valeurs €</th>
-    <th class= p-2">Total 💰</th>
-  </tr>
-</thead>
+  <!-- === NAVIGATION OCTO (icônes carrées) === -->
+  <header id="octoNav" class="sticky top-0 z-40 bg-black/50 backdrop-blur-sm border-b border-gray-800">
+    <div class="max-w-md mx-auto p-2 flex items-center gap-3 justify-center">
+      <!-- App principale (OctoCash) -->
+      <button class="octo-tab active group" data-view="cash" title="OctoCash">
+        <img
+          src="https://i.postimg.cc/nhxkCDtt/4b00c79e-aa58-4bc0-a1b6-ff06247ee36d.png"
+          alt="OctoCash"
+          class="w-12 h-12 object-cover ring-2 ring-yellow-400/0 group-[.active]:ring-yellow-400 transition rounded-md"
+        />
+      </button>
 
-          <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
-          <tfoot>
-  <tr>
-    <td colspan="4" class="p-3 text-center">
-      <span class="text-lg font-semibold text-gray-200 mr-2">Total caisse :</span>
-      <span id="totalCaisse" class="mono font-bold text-yellow-400 text-2xl">
-        0,00 €
-      </span>
-    </td>
-  </tr>
-</tfoot>
+      <!-- OctoLine (annuaire) -->
+      <button class="octo-tab group" data-view="phone" title="OctoLine – Téléphone">
+        <img
+          src="https://i.postimg.cc/zGNjVg1X/bdef83e7-f3c5-40ab-9901-ab2c4feddb6a.png"
+          alt="OctoLine"
+          class="w-12 h-12 object-cover ring-2 ring-yellow-400/0 group-[.active]:ring-yellow-400 transition rounded-md"
+        />
+      </button>
 
+      <!-- OctoGuides (placeholder) -->
+      <button class="octo-tab group" data-view="audio" title="OctoGuides – Audio guides">
+        <img
+          src="https://i.postimg.cc/mtdMnhkx/JW0S7Zk7.png"
+          alt="OctoGuides"
+          class="w-12 h-12 object-cover ring-2 ring-yellow-400/0 group-[.active]:ring-yellow-400 transition rounded-md"
+        />
+      </button>
+    </div>
+  </header>
 
-        </table>
-      </div>
-    </section>
-
-
-
-    <!-- Actions principales -->
-    <section class="sticky-cta rounded-2xl">
-      <div class="flex items-center gap-2">
-        <button id="btnCalculer" class="flex-1 px-4 py-3 rounded-2xl bg-yellow-400 text-black font-semibold shadow hover:bg-yellow-300 active:translate-y-px">Calculer la recette</button>
-        <button id="btnReset" class="px-4 py-3 rounded-2xl bg-black text-gray-200 hover:bg-gray-900">Réinitialiser</button>
-      </div>
-    </section>
-
-    <!-- Résultats -->
-    <section class="mt-4" id="resultats" hidden>
-      <div class="rounded-2xl shadow-sm p-3 card">
-        <div class="grid grid-cols-1 gap-3">
-          <div class="p-3 rounded-xl bg-gray-800/70 border border-gray-600 text-center">
-            <div class="text-sm uppercase tracking-wide text-gray-400">RECETTE À ENVOYER ✉️</div>
-            <div class="text-2xl font-bold mono text-yellow-400" id="valRecette">—</div>
-          </div>
+  <!-- ======== VUE 1 : OCTOCASH (calculateur) ======== -->
+  <main id="view-cash">
+    <div class="max-w-md mx-auto p-4 pb-28">
+      <!-- Tableau de saisie -->
+      <section class="mb-4">
+        <div class="rounded-2xl shadow-sm overflow-hidden card">
+          <table class="w-full text-sm">
+            <thead class="text-gray-200">
+              <tr>
+                <th class="text-center p-2 w-[72px] sm:w-[84px]">Vrac 🟡</th>
+                <th class="text-left p-2 w-[50px]  sm:w-[58px]">Rouleaux</th>
+                <th class="text-center p-2 w-[86px]  sm:w-[100px]">Valeurs €</th>
+                <th class="p-2">Total 💰</th>
+              </tr>
+            </thead>
+            <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="p-3 text-center">
+                  <span class="text-lg font-semibold text-gray-200 mr-2">Total caisse :</span>
+                  <span id="totalCaisse" class="mono font-bold text-yellow-400 text-2xl">0,00 €</span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
-      </div>
+      </section>
 
-      <div class="rounded-2xl shadow-sm p-3 mt-3 card">
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="font-semibold text-yellow-400">DÉTAIL RECETTE :</h4>
-          <span class="text-sm text-gray-400">Fond sélectionné : <strong id="fondActuelBadge" class="text-gray-100">200,00 €</strong></span>
+      <!-- Actions principales -->
+      <section class="sticky-cta rounded-2xl">
+        <div class="flex items-center gap-2">
+          <button id="btnCalculer" class="flex-1 px-4 py-3 rounded-2xl bg-yellow-400 text-black font-semibold shadow hover:bg-yellow-300 active:translate-y-px">Calculer la recette</button>
+          <button id="btnReset" class="px-4 py-3 rounded-2xl bg-black text-gray-200 hover:bg-gray-900">Réinitialiser</button>
         </div>
-        <div id="detailRecette" class="text-sm space-y-1 text-center"></div>
-      </div>
-    </section>
-  </div>
+      </section>
 
-<!-- Signature -->
-<div class="signature text-yellow-300 italic font-light tracking-wide text-base flex items-center justify-center gap-1 mt-6" style="transform: skewX(-10deg);">
-  By Edithe 💛 
-    <path d="M12 21s-6.716-4.373-9.33-7.117C.93 11.02 1.238 7.94 3.343 6.02 5.26 4.288 8.093 4.61 10 6.243c1.907-1.633 4.74-1.955 6.657-.223 2.105 1.92 2.413 5 .673 7.863C18.716 16.627 12 21 12 21z"/>
-  </svg>
-</div>
-
-  <!-- MODAL de sélection du fond -->
-  <div id="fondModal" class="fixed inset-0 z-50 hidden" aria-labelledby="fondTitle" aria-modal="true" role="dialog">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close="backdrop"></div>
-    <div class="relative max-w-md mx-auto mt-24 card rounded-2xl shadow-xl overflow-hidden">
-      <div class="p-4 border-b border-gray-700">
-        <h3 id="fondTitle" class="text-lg font-semibold text-yellow-400">Choisir le fond de caisse</h3>
-        <p class="text-sm text-gray-400">Sélectionnez un fond à conserver avant de calculer la recette.</p>
-      </div>
-      <div class="p-4 space-y-3">
-        <!-- Billetterie -->
-        <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 cursor-pointer">
-          <input type="radio" name="fondChoice" value="20000" class="radio-gold" />
-          <div>
-            <div class="font-medium">Fond Billetterie</div>
-            <div class="text-lg font-semibold text-yellow-400">200,00 €</div>
-          </div>
-        </label>
-        <!-- Boutique -->
-        <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 cursor-pointer">
-          <input type="radio" name="fondChoice" value="25000" class="radio-gold" />
-          <div>
-            <div class="font-medium">Fond Boutique</div>
-            <div class="text-lg font-semibold text-yellow-400">250,00 €</div>
-          </div>
-        </label>
-        <!-- Fond personnalisé (tout le bloc cliquable comme les autres) -->
-        <label for="fondCustomRadio" class="flex items-start gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 cursor-pointer">
-          <input type="radio" id="fondCustomRadio" name="fondChoice" value="custom" class="radio-gold mt-1" />
-          <div class="flex-1">
-            <div class="font-medium">Fond personnalisé</div>
-            <div class="mt-1 flex items-center gap-2">
-              <input id="fondCustom" type="number" step="0.01" inputmode="decimal"
-                     class="w-32 px-2 py-1 rounded-lg border border-gray-700 bg-gray-800 text-gray-100"
-                     placeholder="ex : 150" />
-              <span class="text-xs text-gray-400">€</span>
+      <!-- Résultats -->
+      <section class="mt-4" id="resultats" hidden>
+        <div class="rounded-2xl shadow-sm p-3 card">
+          <div class="grid grid-cols-1 gap-3">
+            <div class="p-3 rounded-xl bg-gray-800/70 border border-gray-600 text-center">
+              <div class="text-sm uppercase tracking-wide text-gray-400">RECETTE À ENVOYER ✉️</div>
+              <div class="text-2xl font-bold mono text-yellow-400" id="valRecette">—</div>
             </div>
           </div>
-        </label>
-        <p id="fondCustomHint" class="mt-2 text-xs text-rose-400 hidden">Veuillez saisir un montant valide ≥ 0.</p>
-      </div>
-      <div class="p-4 border-t border-gray-700 flex items-center justify-end gap-2">
-        <button id="fondCancel" class="px-3 py-2 rounded-xl">Annuler</button>
-        <button id="fondConfirm" class="px-4 py-2 rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-300">Confirmer</button>
+        </div>
+
+        <div class="rounded-2xl shadow-sm p-3 mt-3 card">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-semibold text-yellow-400">DÉTAIL RECETTE :</h4>
+            <span class="text-sm text-gray-400">Fond sélectionné : <strong id="fondActuelBadge" class="text-gray-100">200,00 €</strong></span>
+          </div>
+          <div id="detailRecette" class="text-sm space-y-1 text-center"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature text-yellow-300 italic font-light tracking-wide text-base flex items-center justify-center gap-1 mt-6" style="transform: skewX(-10deg);">
+      By Edithe 💛
+    </div>
+
+    <!-- MODAL de sélection du fond -->
+    <div id="fondModal" class="fixed inset-0 z-50 hidden" aria-labelledby="fondTitle" aria-modal="true" role="dialog">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close="backdrop"></div>
+      <div class="relative max-w-md mx-auto mt-24 card rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-4 border-b border-gray-700">
+          <h3 id="fondTitle" class="text-lg font-semibold text-yellow-400">Choisir le fond de caisse</h3>
+          <p class="text-sm text-gray-400">Sélectionnez un fond à conserver avant de calculer la recette.</p>
+        </div>
+        <div class="p-4 space-y-3">
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 cursor-pointer">
+            <input type="radio" name="fondChoice" value="20000" class="radio-gold" />
+            <div>
+              <div class="font-medium">Fond Billetterie</div>
+              <div class="text-lg font-semibold text-yellow-400">200,00 €</div>
+            </div>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 cursor-pointer">
+            <input type="radio" name="fondChoice" value="25000" class="radio-gold" />
+            <div>
+              <div class="font-medium">Fond Boutique</div>
+              <div class="text-lg font-semibold text-yellow-400">250,00 €</div>
+            </div>
+          </label>
+          <label for="fondCustomRadio" class="flex items-start gap-3 p-3 rounded-xl border border-gray-700 hover:bg-gray-800 cursor-pointer">
+            <input type="radio" id="fondCustomRadio" name="fondChoice" value="custom" class="radio-gold mt-1" />
+            <div class="flex-1">
+              <div class="font-medium">Fond personnalisé</div>
+              <div class="mt-1 flex items-center gap-2">
+                <input id="fondCustom" type="number" step="0.01" inputmode="decimal"
+                       class="w-32 px-2 py-1 rounded-lg border border-gray-700 bg-gray-800 text-gray-100"
+                       placeholder="ex : 150" />
+                <span class="text-xs text-gray-400">€</span>
+              </div>
+            </div>
+          </label>
+          <p id="fondCustomHint" class="mt-2 text-xs text-rose-400 hidden">Veuillez saisir un montant valide ≥ 0.</p>
+        </div>
+        <div class="p-4 border-t border-gray-700 flex items-center justify-end gap-2">
+          <button id="fondCancel" class="px-3 py-2 rounded-xl">Annuler</button>
+          <button id="fondConfirm" class="px-4 py-2 rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-300">Confirmer</button>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 
+  <!-- ======== VUE 2 : OCTOLINE (annuaire téléphone) ======== -->
+  <section id="view-phone" class="max-w-md mx-auto p-4" hidden>
+    <div class="rounded-2xl shadow-sm p-3 card">
+      <div class="mb-2">
+        <label for="olSearch" class="sr-only">Rechercher un poste</label>
+        <input
+          id="olSearch"
+          type="text"
+          placeholder="Rechercher (ex : Namazu, DR, EG, 3134)"
+          class="ol-input w-full px-3 py-2 rounded-xl border"
+          autocomplete="off"
+        />
+      </div>
+      <div id="olList" class="max-h-[55vh] overflow-y-auto divide-y divide-gray-800"></div>
+    </div>
+  </section>
+
+  <!-- ======== VUE 3 : OCTOGUIDES (placeholder) ======== -->
+  <section id="view-audio" class="max-w-md mx-auto p-4" hidden>
+    <div class="rounded-2xl shadow-sm p-6 text-center card">
+      <h3 class="text-lg font-semibold text-yellow-400 mb-1">OctoGuides</h3>
+      <p class="text-gray-300">Fonctionnalité à venir : audioguides, lecteurs, prêt/retour…</p>
+    </div>
+  </section>
+
+  <!-- ========= SCRIPT CALCULATEUR ========= -->
   <script>
     // --- Modèle des dénominations (centimes) ---
     const EURO = {
-  coins: [
-    { value: 1,   label: '<span class="whitespace-nowrap"><span class="text-[10px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">1 c</span></span>', roll: 50 },
-    { value: 2,   label: '<span class="whitespace-nowrap"><span class="text-[11px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">2 c</span></span>', roll: 50 },
-    { value: 5,   label: '<span class="whitespace-nowrap"><span class="text-xs">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">5 c</span></span>', roll: 50 },
-    { value: 10,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-sm">🟡</span><span class="text-[13px] font-medium align-middle">10 c</span></span>', roll: 40 },
-    { value: 20,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-base">🟡</span><span class="text-[13px] font-medium align-middle">20 c</span></span>', roll: 40 },
-    { value: 50,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-lg">🟡</span><span class="text-[13px] font-medium align-middle">50 c</span></span>', roll: 40 },
-    { value: 100, label: '<span class="whitespace-nowrap"><span class="text-lg">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">1 €</span></span>', roll: 25 },
-    { value: 200, label: '<span class="whitespace-nowrap"><span class="text-xl">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">2 €</span></span>', roll: 25 },
-  ],
-  notes: [5,10,20,50,100,200,500].map(v => ({
-    value: v*100,
-    label:
-      v === 5  ? `<span class="whitespace-nowrap"><span class="text-lg">💶</span> ${v} €</span>` :
-      v === 10 ? `<span class="whitespace-nowrap"><span class="text-lg">💴</span> ${v} €</span>` :
-      v <= 20  ? `<span class="whitespace-nowrap"><span class="text-lg">💷</span> ${v} €</span>` :
-      v <= 100 ? `<span class="whitespace-nowrap"><span class="text-xl">💵</span> ${v} €</span>` :
-                 `<span class="whitespace-nowrap"><span class="text-2xl">💶</span> ${v} €</span>`
-  }))
-};
-
-    // Etat courant
-    const state = {
-      fondCible: 20000, // en centimes (par défaut 200€)
-      inputs: {},
-      lastFondChoice: '20000'
+      coins: [
+        { value: 1,   label: '<span class="whitespace-nowrap"><span class="text-[10px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">1 c</span></span>', roll: 50 },
+        { value: 2,   label: '<span class="whitespace-nowrap"><span class="text-[11px]">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">2 c</span></span>', roll: 50 },
+        { value: 5,   label: '<span class="whitespace-nowrap"><span class="text-xs">🟤</span><span class="ml-1 text-[13px] font-medium align-middle">5 c</span></span>', roll: 50 },
+        { value: 10,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-sm">🟡</span><span class="text-[13px] font-medium align-middle">10 c</span></span>', roll: 40 },
+        { value: 20,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-base">🟡</span><span class="text-[13px] font-medium align-middle">20 c</span></span>', roll: 40 },
+        { value: 50,  label: '<span class="whitespace-nowrap"><span class="mr-1 text-lg">🟡</span><span class="text-[13px] font-medium align-middle">50 c</span></span>', roll: 40 },
+        { value: 100, label: '<span class="whitespace-nowrap"><span class="text-lg">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">1 €</span></span>', roll: 25 },
+        { value: 200, label: '<span class="whitespace-nowrap"><span class="text-xl">🪙</span><span class="ml-1 text-[13px] font-medium align-middle">2 €</span></span>', roll: 25 },
+      ],
+      notes: [5,10,20,50,100,200,500].map(v => ({
+        value: v*100,
+        label:
+          v === 5  ? `<span class="whitespace-nowrap"><span class="text-lg">💶</span> ${v} €</span>` :
+          v === 10 ? `<span class="whitespace-nowrap"><span class="text-lg">💴</span> ${v} €</span>` :
+          v <= 20  ? `<span class="whitespace-nowrap"><span class="text-lg">💷</span> ${v} €</span>` :
+          v <= 100 ? `<span class="whitespace-nowrap"><span class="text-xl">💵</span> ${v} €</span>` :
+                     `<span class="whitespace-nowrap"><span class="text-2xl">💶</span> ${v} €</span>`
+      }))
     };
 
+    // Etat courant
+    const state = { fondCible: 20000, inputs: {}, lastFondChoice: '20000' };
     const fmt = new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' });
 
     // --- Construction du tableau de saisie ---
     const tbody = document.getElementById('tbody');
     const rows = [];
-function makeRow(key, label, valueCents, hasRoll){
-  const tr = document.createElement('tr');
-  tr.className = 'border-t border-gray-700';
+    function makeRow(key, label, valueCents, hasRoll){
+      const tr = document.createElement('tr');
+      tr.className = 'border-t border-gray-700';
 
-  const rollsCell = hasRoll
-    ? `<select data-key="${key}" data-type="rolls"
-         class="appearance-none w-7 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 focus:ring-2 focus:ring-gray-500 focus:border-black">
-          ${[0,1,2,3].map(n=>`<option value="${n}">${n}</option>`).join('')}
-       </select>`
-    : `<span class="text-gray-500">—</span>`;
+      const rollsCell = hasRoll
+        ? `<select data-key="${key}" data-type="rolls"
+             class="appearance-none w-7 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 focus:ring-2 focus:ring-gray-500 focus:border-black">
+              ${[0,1,2,3].map(n=>`<option value="${n}">${n}</option>`).join('')}
+           </select>`
+        : `<span class="text-gray-500">—</span>`;
 
-  tr.innerHTML = `
-    <td class="p-2 text-center font-medium">
-      <div class="inline-flex items-center gap-1">
-        <input data-key="${key}" data-type="loose" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*"
-          class="appearance-none w-16 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-gray-500 focus:border-black text-base"
-  value="" placeholder="0"/>
-        <button
-          class="px-2 py-1 rounded-lg border border-black bg-black text-yellow-400 hover:bg-yellow-500 hover:text-black"
-          data-plus="${key}" title="Ajouter au vrac">+</button>
-      </div>
-    </td>
-    <td class="p-2 text-center font-medium">${rollsCell}</td>
-    <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
-  <td class="p-2 text-center mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
-`;
- // <— IMPORTANT : on ferme la template string ici
-
-  tbody.appendChild(tr);
-  rows.push({ key, valueCents, hasRoll });
-}
-
+      tr.innerHTML = `
+        <td class="p-2 text-center font-medium">
+          <div class="inline-flex items-center gap-1">
+            <input data-key="${key}" data-type="loose" type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*"
+              class="appearance-none w-16 px-2 py-1 rounded-lg border border-black bg-gray-950 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-gray-500 focus:border-black text-base"
+              value="" placeholder="0"/>
+            <button
+              class="px-2 py-1 rounded-lg border border-black bg-black text-yellow-400 hover:bg-yellow-500 hover:text-black"
+              data-plus="${key}" title="Ajouter au vrac">+</button>
+          </div>
+        </td>
+        <td class="p-2 text-center font-medium">${rollsCell}</td>
+        <td class="p-2 text-center font-semibold text-gray-200">${label}</td>
+        <td class="p-2 text-center mono font-bold text-yellow-400 whitespace-nowrap pr-4" data-total="${key}">0,00 €</td>
+      `;
+      tbody.appendChild(tr);
+      rows.push({ key, valueCents, hasRoll });
+    }
 
     EURO.coins.forEach((c)=>makeRow('c'+c.value, c.label, c.value, true));
     EURO.notes.forEach((n)=>makeRow('n'+n.value, n.label, n.value, false));
@@ -360,590 +348,411 @@ function makeRow(key, label, valueCents, hasRoll){
 
     function centsToStr(c){ return fmt.format(c/100); }
 
-    // === 1) calcRecette (non destructif + méta rouleaux cassés) ===
-function calcRecette(inv, fondCible){
-  const total = Array.from(inv.entries()).reduce((s,[v,{loose,rolls,rollSize}])=> s + (loose + rolls*rollSize)*v, 0);
-  const toRecipe = total - fondCible;
-  if (toRecipe < 0) {
-    return { ok:false, message:`Total insuffisant pour atteindre le fond choisi (${centsToStr(fondCible)}). Manque ${centsToStr(-toRecipe)}.` };
-  }
-  if (toRecipe === 0) {
-    return {
-      ok:true,
-      recette:new Map(),
-      fond: structuredClone(inv), // on ne modifie jamais ta saisie
-      total, fondCible, recetteTotal:0,
-      metaRollsBroken:new Map(),
-      metaCoinsFromRoll:new Map()
-    };
-  }
+    // === Calcul recette (algorithme existant) ===
+    function calcRecette(inv, fondCible){
+      const total = Array.from(inv.entries()).reduce((s,[v,{loose,rolls,rollSize}])=> s + (loose + rolls*rollSize)*v, 0);
+      const toRecipe = total - fondCible;
+      if (toRecipe < 0) {
+        return { ok:false, message:`Total insuffisant pour atteindre le fond choisi (${centsToStr(fondCible)}). Manque ${centsToStr(-toRecipe)}.` };
+      }
+      if (toRecipe === 0) {
+        return { ok:true, recette:new Map(), fond: structuredClone(inv), total, fondCible, recetteTotal:0, metaRollsBroken:new Map(), metaCoinsFromRoll:new Map() };
+      }
 
-  // Items proposés au sac à dos : billets, pièces vrac, pièces issues de rouleaux (pénalisées)
-  const items = [];
+      const items = [];
+      EURO.notes.forEach(n => { const v = n.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:0}; if (e.loose > 0) items.push({ value:v, count:e.loose, bucket:'bill', denom:v }); });
+      EURO.coins.forEach(c => { const v = c.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll}; if (e.loose > 0) items.push({ value:v, count:e.loose, bucket:'coinLoose', denom:v }); });
+      EURO.coins.forEach(c => { const v = c.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll}; const stockFromRolls = (e.rolls||0) * (e.rollSize||c.roll); if (stockFromRolls > 0) items.push({ value:v, count:stockFromRolls, bucket:'coinFromRoll', denom:v }); });
 
-  // Billets
-  EURO.notes.forEach(n => {
-    const v = n.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:0};
-    if (e.loose > 0) items.push({ value:v, count:e.loose, bucket:'bill', denom:v });
-  });
+      function unitCost(it){ const base = it.bucket==='bill' ? 800 : (it.bucket==='coinLoose'?2000:4000); return base - 0.01 * it.denom; }
 
-  // Pièces vrac (prioritaires avant de casser un rouleau)
-  EURO.coins.forEach(c => {
-    const v = c.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll};
-    if (e.loose > 0) items.push({ value:v, count:e.loose, bucket:'coinLoose', denom:v });
-  });
+      const chunks = [];
+      items.forEach(it => { let k = it.count, pow = 1; while (k > 0){ const take = Math.min(pow, k); const amount = it.value * take; const cost = unitCost(it) * take; chunks.push({ amount, cost, trace:{ bucket:it.bucket, denom:it.denom, take } }); k -= take; pow *= 2; } });
 
-  // Pièces issues de rouleaux (stock “virtuel” si on casse)
-  EURO.coins.forEach(c => {
-    const v = c.value; const e = inv.get(v) || {loose:0, rolls:0, rollSize:c.roll};
-    const stockFromRolls = (e.rolls||0) * (e.rollSize||c.roll);
-    if (stockFromRolls > 0) items.push({ value:v, count:stockFromRolls, bucket:'coinFromRoll', denom:v });
-  });
+      const R = toRecipe, INF = 1e15;
+      const dp = new Float64Array(R+1); const prev = new Int32Array(R+1); const used = new Int32Array(R+1);
+      for(let i=1;i<=R;i++){ dp[i]=INF; prev[i]=-1; used[i]=-1; }
+      dp[0]=0; prev[0]=-1; used[0]=-1;
 
-  // Coût unitaire (plus petit = plus préféré)
-  function unitCost(it){
-    const base =
-      it.bucket==='bill'        ?  800 :   // favorise les billets
-      it.bucket==='coinLoose'   ? 2000 :   // puis pièces vrac
-                                  4000 ;   // pièces issues de rouleaux (pénalisées)
-    const epsilon = 0.01;
-    return base - epsilon * it.denom; // à coût égal, préfère grosses dénominations
-  }
+      chunks.forEach((ch, idx) => { for(let a=R; a>=ch.amount; a--){ const cand = dp[a - ch.amount] + ch.cost; if (cand < dp[a]) { dp[a] = cand; prev[a] = a - ch.amount; used[a] = idx; } } });
 
-  // Bounded knapsack par binary splitting
-  const chunks = [];
-  items.forEach(it => {
-    let k = it.count, pow = 1;
-    while (k > 0){
-      const take = Math.min(pow, k);
-      const amount = it.value * take;
-      const cost = unitCost(it) * take;
-      chunks.push({ amount, cost, trace:{ bucket:it.bucket, denom:it.denom, take } });
-      k -= take; pow *= 2;
-    }
-  });
+      if (!isFinite(dp[R]) || dp[R] >= INF){ return { ok:false, message:`Impossible d'atteindre exactement la recette ${centsToStr(R)} avec les valeurs disponibles.` }; }
 
-  const R = toRecipe;
-  const INF = 1e15;
-  const dp = new Float64Array(R+1);
-  const prev = new Int32Array(R+1);
-  const used = new Int32Array(R+1);
-  for(let i=1;i<=R;i++){ dp[i]=INF; prev[i]=-1; used[i]=-1; }
-  dp[0]=0; prev[0]=-1; used[0]=-1;
+      const takeBill = new Map(), takeCoinLoose = new Map(), takeCoinFromRoll = new Map();
+      let cur = R;
+      while (cur > 0){
+        const ch = chunks[used[cur]]; const d = ch.trace.denom;
+        if (ch.trace.bucket==='bill') takeBill.set(d, (takeBill.get(d)||0) + ch.trace.take);
+        else if (ch.trace.bucket==='coinLoose') takeCoinLoose.set(d, (takeCoinLoose.get(d)||0) + ch.trace.take);
+        else takeCoinFromRoll.set(d, (takeCoinFromRoll.get(d)||0) + ch.trace.take);
+        cur = prev[cur];
+      }
 
-  chunks.forEach((ch, idx) => {
-    for(let a=R; a>=ch.amount; a--){
-      const cand = dp[a - ch.amount] + ch.cost;
-      if (cand < dp[a]) { dp[a] = cand; prev[a] = a - ch.amount; used[a] = idx; }
-    }
-  });
+      const stockBills = new Map();
+      EURO.notes.forEach(n => { const v = n.value; stockBills.set(v, (inv.get(v)?.loose|0)); });
 
-  if (!isFinite(dp[R]) || dp[R] >= INF){
-    return { ok:false, message:`Impossible d'atteindre exactement la recette ${centsToStr(R)} avec les valeurs disponibles.` };
-  }
+      let takenCents = 0;
+      EURO.notes.forEach(n => { const v = n.value; const want = (takeBill.get(v)||0); const have = stockBills.get(v)||0; const keep = Math.min(want, have); if (keep !== want) takeBill.set(v, keep); takenCents += keep * v; });
+      EURO.coins.forEach(c => { const v = c.value; takenCents += ((takeCoinLoose.get(v)||0) + (takeCoinFromRoll.get(v)||0)) * v; });
 
-  // Reconstruction : combien pris en billets / pièces (vrac vs rouleaux)
-  const takeBill = new Map();          // denom -> nb billets
-  const takeCoinLoose = new Map();     // denom -> nb pièces depuis vrac
-  const takeCoinFromRoll = new Map();  // denom -> nb pièces en cassant des rouleaux
+      let rest = toRecipe - takenCents; if (rest < 0) rest = 0;
 
-  let cur = R;
-  while (cur > 0){
-    const ch = chunks[used[cur]];
-    const d = ch.trace.denom;
-    if (ch.trace.bucket==='bill')           takeBill.set(d, (takeBill.get(d)||0) + ch.trace.take);
-    else if (ch.trace.bucket==='coinLoose') takeCoinLoose.set(d, (takeCoinLoose.get(d)||0) + ch.trace.take);
-    else                                    takeCoinFromRoll.set(d, (takeCoinFromRoll.get(d)||0) + ch.trace.take);
-    cur = prev[cur];
-  }
-    // === CAP STRICT + RECOMPLÉTION ===
-  // 1) plafonner les billets au stock saisi
-  const stockBills = new Map();
-  EURO.notes.forEach(n => {
-    const v = n.value;
-    stockBills.set(v, (inv.get(v)?.loose|0));
-  });
+      const completion = [];
+      EURO.notes.slice().sort((a,b)=>b.value-a.value).forEach(n=>{ const v = n.value; const used = takeBill.get(v)||0; const max = (stockBills.get(v)||0) - used; if (max > 0) completion.push({value:v, count:max, bucket:'bill'}); });
+      EURO.coins.slice().sort((a,b)=>b.value-a.value).forEach(c=>{ const v = c.value; const have = inv.get(v)?.loose|0; const used = takeCoinLoose.get(v)||0; const max = have - used; if (max > 0) completion.push({value:v, count:max, bucket:'coinLoose'}); });
+      EURO.coins.slice().sort((a,b)=>b.value-a.value).forEach(c=>{ const v = c.value; const e = inv.get(v) || {rolls:0, rollSize:c.roll}; const have = (e.rolls|0) * (e.rollSize||c.roll); const used = takeCoinFromRoll.get(v)||0; const max = have - used; if (max > 0) completion.push({value:v, count:max, bucket:'coinFromRoll'}); });
 
-  // calc de la somme "prise" actuelle et déficit éventuel dû au cap
-  let takenCents = 0;
-  EURO.notes.forEach(n => {
-    const v = n.value;
-    const want = (takeBill.get(v)||0);
-    const have = stockBills.get(v)||0;
-    const keep = Math.min(want, have);
-    if (keep !== want) takeBill.set(v, keep); // cap
-    takenCents += keep * v;
-  });
-  EURO.coins.forEach(c => {
-    const v = c.value;
-    takenCents += ((takeCoinLoose.get(v)||0) + (takeCoinFromRoll.get(v)||0)) * v;
-  });
-
-  // montant restant à atteindre
-  let rest = toRecipe - takenCents;
-  if (rest < 0) rest = 0;
-
-  // 2) catalogue de complétion : billets restants, pièces vrac, pièces depuis rouleaux
-  const completion = [];
-
-  // billets restants (gros -> petit)
-  EURO.notes.slice().sort((a,b)=>b.value-a.value).forEach(n=>{
-    const v = n.value;
-    const used = takeBill.get(v)||0;
-    const max = (stockBills.get(v)||0) - used;
-    if (max > 0) completion.push({value:v, count:max, bucket:'bill'});
-  });
-  // pièces vrac (gros -> petit)
-  EURO.coins.slice().sort((a,b)=>b.value-a.value).forEach(c=>{
-    const v = c.value;
-    const have = inv.get(v)?.loose|0;
-    const used = takeCoinLoose.get(v)||0;
-    const max = have - used;
-    if (max > 0) completion.push({value:v, count:max, bucket:'coinLoose'});
-  });
-  // pièces issues de rouleaux (gros -> petit)
-  EURO.coins.slice().sort((a,b)=>b.value-a.value).forEach(c=>{
-    const v = c.value;
-    const e = inv.get(v) || {rolls:0, rollSize:c.roll};
-    const have = (e.rolls|0) * (e.rollSize||c.roll);
-    const used = takeCoinFromRoll.get(v)||0;
-    const max = have - used;
-    if (max > 0) completion.push({value:v, count:max, bucket:'coinFromRoll'});
-  });
-
-  // 3) petit DP borné pour compléter "rest"
-  if (rest > 0){
-    const R2 = rest;
-    const INF = 1e15;
-    let dp2 = Array(R2+1).fill(INF); dp2[0]=0;
-    const choose = completion.map(()=>Array(R2+1).fill(0));
-    const baseCost = b => b==='bill'?800:(b==='coinLoose'?2000:4000);
-
-    for (let i=0;i<completion.length;i++){
-      const {value, count, bucket} = completion[i];
-      const cost = baseCost(bucket) - 0.01*value;
-      const ndp = dp2.slice();
-      const nchoose = Array(R2+1).fill(0);
-      for (let a=0;a<=R2;a++){
-        let best = dp2[a], bestm=0;
-        for (let m=1;m<=count;m++){
-          const p=a-m*value; if(p<0)break;
-          const cand = dp2[p] + m*cost;
-          if (cand < best){ best=cand; bestm=m; }
+      if (rest > 0){
+        const R2 = rest; let dp2 = Array(R2+1).fill(INF); dp2[0]=0;
+        const choose = completion.map(()=>Array(R2+1).fill(0));
+        const baseCost = b => b==='bill'?800:(b==='coinLoose'?2000:4000);
+        for (let i=0;i<completion.length;i++){
+          const {value, count, bucket} = completion[i]; const cost = baseCost(bucket) - 0.01*value;
+          const ndp = dp2.slice(); const nchoose = Array(R2+1).fill(0);
+          for (let a=0;a<=R2;a++){
+            let best = dp2[a], bestm=0;
+            for (let m=1;m<=count;m++){
+              const p=a-m*value; if(p<0)break;
+              const cand = dp2[p] + m*cost;
+              if (cand < best){ best=cand; bestm=m; }
+            }
+            ndp[a]=best; nchoose[a]=bestm;
+          }
+          const newChoose = completion.map((_,k)=>Array(R2+1).fill(0));
+          for (let a=0;a<=R2;a++){
+            if (!isFinite(ndp[a])) continue;
+            const m = nchoose[a]; const p = a - m*value;
+            for (let k=0;k<i;k++) newChoose[k][a] = choose[k][p];
+            newChoose[i][a] = m;
+          }
+          dp2 = ndp;
+          for (let k=0;k<=i;k++) choose[k] = newChoose[k];
         }
-        ndp[a]=best; nchoose[a]=bestm;
-      }
-      // propager les choix
-      const newChoose = completion.map((_,k)=>Array(R2+1).fill(0));
-      for (let a=0;a<=R2;a++){
-        if (!isFinite(ndp[a])) continue;
-        const m = nchoose[a];
-        const p = a - m*value;
-        for (let k=0;k<i;k++) newChoose[k][a] = choose[k][p];
-        newChoose[i][a] = m;
-      }
-      dp2 = ndp;
-      for (let k=0;k<=i;k++) choose[k] = newChoose[k];
-    }
-
-    if (isFinite(dp2[R2])){
-      for (let i=0;i<completion.length;i++){
-        const m = choose[i][R2]||0;
-        if (!m) continue;
-        const {value, bucket} = completion[i];
-        if (bucket==='bill')          takeBill.set(value, (takeBill.get(value)||0) + m);
-        else if (bucket==='coinLoose') takeCoinLoose.set(value, (takeCoinLoose.get(value)||0) + m);
-        else                           takeCoinFromRoll.set(value, (takeCoinFromRoll.get(value)||0) + m);
-      }
-      rest = 0;
-    }
-  }
-
-
-  // Sortie "recette" pour le rendu (pièces/billets uniquement, jamais “1× 25 €”)
-  const recetteMap = new Map();
-  EURO.coins.forEach(c => {
-    const v = c.value;
-    const coins = (takeCoinLoose.get(v)||0) + (takeCoinFromRoll.get(v)||0);
-    recetteMap.set(v, { bill:0, coin:coins, roll:0, rollSize: inv.get(v)?.rollSize || c.roll });
-  });
-  EURO.notes.forEach(n => {
-    const v = n.value;
-    recetteMap.set(v, { bill:(takeBill.get(v)||0), coin:0, roll:0, rollSize: 0 });
-  });
-
-  const recetteTotal = Array.from(recetteMap.entries()).reduce((s,[v,obj]) => s + v*(obj.bill + obj.coin), 0);
-
-  // Fond renvoyé = clone exact (on ne modifie pas ta fiche)
-  const fondClone = structuredClone(inv);
-
-  // Méta : combien de rouleaux “virtuellement” cassés & nb de pièces issues de rouleaux
-  const metaRollsBroken = new Map();
-  const metaCoinsFromRoll = new Map();
-  EURO.coins.forEach(c => {
-    const v = c.value;
-    const fromRoll = (takeCoinFromRoll.get(v)||0);
-    if (fromRoll > 0){
-      const size = inv.get(v)?.rollSize || c.roll;
-      const rollsToBreak = Math.ceil(fromRoll / size);
-      metaRollsBroken.set(v, rollsToBreak);
-      metaCoinsFromRoll.set(v, fromRoll);
-    }
-  });
-
-  return {
-    ok:true,
-    recette:recetteMap,
-    fond: fondClone,
-    total, fondCible, recetteTotal,
-    metaRollsBroken,
-    metaCoinsFromRoll
-  };
-}
-
-
-// === renderRecetteOrdered avec emojis par dénomination + nombre en gras ===
-function renderRecetteOrdered(container, map, metaCoinsFromRoll = new Map()){
-  container.innerHTML = '';
-
-  // petit helper pour fabriquer l’emoji correspondant à la dénomination
-  function createDenomIcon(type, valueCents){
-    const span = document.createElement('span');
-    // Pièces
-    if (type === 'coin'){
-      switch (valueCents){
-        case 1:   span.textContent = '🟤'; span.className = 'text-[10px]'; break; // 1 c
-        case 2:   span.textContent = '🟤'; span.className = 'text-[11px]'; break; // 2 c
-        case 5:   span.textContent = '🟤'; span.className = 'text-xs';     break; // 5 c
-        case 10:  span.textContent = '🟡'; span.className = 'text-sm';     break; // 10 c
-        case 20:  span.textContent = '🟡'; span.className = 'text-base';   break; // 20 c
-        case 50:  span.textContent = '🟡'; span.className = 'text-lg';     break; // 50 c
-        case 100: span.textContent = '🪙'; span.className = 'text-lg';     break; // 1 €
-        case 200: span.textContent = '🪙'; span.className = 'text-xl';     break; // 2 €
-        default:  span.textContent = '🟡'; // fallback
-      }
-    } else {
-      // Billets — on reprend ta logique d’emoji utilisée dans les labels
-      const v = valueCents / 100;
-      if (v === 5)        { span.textContent = '💶'; span.className = 'text-lg'; }
-      else if (v === 10)  { span.textContent = '💴'; span.className = 'text-lg'; }
-      else if (v <= 20)   { span.textContent = '💷'; span.className = 'text-lg'; }
-      else if (v <= 100)  { span.textContent = '💵'; span.className = 'text-xl'; }
-      else                { span.textContent = '💶'; span.className = 'text-2xl'; }
-    }
-    return span;
-  }
-
-  // ordre: pièces (petites -> grosses), puis billets (petits -> gros)
-  const order = EURO.coins.map(c=>({v:c.value, type:'coin'}))
-                .concat(EURO.notes.map(n=>({v:n.value, type:'bill'})));
-
-  let any = false;
-
-  order.forEach(({ v, type }) => {
-    const obj = map.get(v);
-    if (!obj) return;
-
-    const line = document.createElement('div');
-    line.className = 'text-base font-semibold text-gray-100';
-
-    const segments = [];
-
-    // Pièces
-    if (type==='coin' && obj.coin) {
-      const seg = document.createElement('span');
-      seg.className = 'inline-flex items-center gap-1';
-
-      // nombre en GRAS
-      const strong = document.createElement('strong');
-      strong.className = 'font-extrabold';
-      strong.textContent = String(obj.coin);
-
-      // contenu : **N**× 1,00 €
-      seg.appendChild(strong);
-      seg.appendChild(document.createTextNode('× ' + fmt.format(v/100) + ' '));
-
-      // emoji spécifique à la dénomination (placé juste après la valeur)
-      seg.appendChild(createDenomIcon('coin', v));
-
-      // alerte si rouleau cassé pour cette dénomination
-      const fromRoll = metaCoinsFromRoll.get(v) || 0;
-      if (fromRoll > 0) {
-        seg.appendChild(document.createTextNode(' '));
-        const warn = document.createElement('span');
-        warn.textContent = '(⚠️ Rouleau cassé)';
-        seg.appendChild(warn);
+        if (isFinite(dp2[R2])){
+          for (let i=0;i<completion.length;i++){
+            const m = choose[i][R2]||0; if (!m) continue;
+            const {value, bucket} = completion[i];
+            if (bucket==='bill') takeBill.set(value, (takeBill.get(value)||0) + m);
+            else if (bucket==='coinLoose') takeCoinLoose.set(value, (takeCoinLoose.get(value)||0) + m);
+            else takeCoinFromRoll.set(value, (takeCoinFromRoll.get(value)||0) + m);
+          }
+          rest = 0;
+        }
       }
 
-      segments.push(seg);
+      const recetteMap = new Map();
+      EURO.coins.forEach(c => { const v = c.value; const coins = (takeCoinLoose.get(v)||0) + (takeCoinFromRoll.get(v)||0); recetteMap.set(v, { bill:0, coin:coins, roll:0, rollSize: inv.get(v)?.rollSize || c.roll }); });
+      EURO.notes.forEach(n => { const v = n.value; recetteMap.set(v, { bill:(takeBill.get(v)||0), coin:0, roll:0, rollSize: 0 }); });
+
+      const recetteTotal = Array.from(recetteMap.entries()).reduce((s,[v,obj]) => s + v*(obj.bill + obj.coin), 0);
+      const fondClone = structuredClone(inv);
+      const metaRollsBroken = new Map(); const metaCoinsFromRoll = new Map();
+      EURO.coins.forEach(c => { const v = c.value; const fromRoll = (takeCoinFromRoll.get(v)||0); if (fromRoll > 0){ const size = inv.get(v)?.rollSize || c.roll; const rollsToBreak = Math.ceil(fromRoll / size); metaRollsBroken.set(v, rollsToBreak); metaCoinsFromRoll.set(v, fromRoll); } });
+
+      return { ok:true, recette:recetteMap, fond: fondClone, total, fondCible, recetteTotal, metaRollsBroken, metaCoinsFromRoll };
     }
 
-    // Billets
-    if (type==='bill' && obj.bill) {
-      const seg = document.createElement('span');
-      seg.className = 'inline-flex items-center gap-1';
-
-      const strong = document.createElement('strong');
-      strong.className = 'font-extrabold';
-      strong.textContent = String(obj.bill);
-
-      seg.appendChild(strong);
-      seg.appendChild(document.createTextNode('× ' + fmt.format(v/100) + ' '));
-
-      // emoji spécifique au billet
-      seg.appendChild(createDenomIcon('bill', v));
-
-      segments.push(seg);
+    // Rendu de la recette
+    function renderRecetteOrdered(container, map, metaCoinsFromRoll = new Map()){
+      container.innerHTML = '';
+      function createDenomIcon(type, valueCents){
+        const span = document.createElement('span');
+        if (type === 'coin'){
+          switch (valueCents){
+            case 1:   span.textContent = '🟤'; span.className = 'text-[10px]'; break;
+            case 2:   span.textContent = '🟤'; span.className = 'text-[11px]'; break;
+            case 5:   span.textContent = '🟤'; span.className = 'text-xs';     break;
+            case 10:  span.textContent = '🟡'; span.className = 'text-sm';     break;
+            case 20:  span.textContent = '🟡'; span.className = 'text-base';   break;
+            case 50:  span.textContent = '🟡'; span.className = 'text-lg';     break;
+            case 100: span.textContent = '🪙'; span.className = 'text-lg';     break;
+            case 200: span.textContent = '🪙'; span.className = 'text-xl';     break;
+            default:  span.textContent = '🟡';
+          }
+        } else {
+          const v = valueCents / 100;
+          if (v === 5)        { span.textContent = '💶'; span.className = 'text-lg'; }
+          else if (v === 10)  { span.textContent = '💴'; span.className = 'text-lg'; }
+          else if (v <= 20)   { span.textContent = '💷'; span.className = 'text-lg'; }
+          else if (v <= 100)  { span.textContent = '💵'; span.className = 'text-xl'; }
+          else                { span.textContent = '💶'; span.className = 'text-2xl'; }
+        }
+        return span;
+      }
+      const order = EURO.coins.map(c=>({v:c.value, type:'coin'})).concat(EURO.notes.map(n=>({v:n.value, type:'bill'})));
+      let any = false;
+      order.forEach(({ v, type }) => {
+        const obj = map.get(v); if (!obj) return;
+        const line = document.createElement('div'); line.className = 'text-base font-semibold text-gray-100';
+        const segments = [];
+        if (type==='coin' && obj.coin) {
+          const seg = document.createElement('span'); seg.className = 'inline-flex items-center gap-1';
+          const strong = document.createElement('strong'); strong.className = 'font-extrabold'; strong.textContent = String(obj.coin);
+          seg.appendChild(strong); seg.appendChild(document.createTextNode('× ' + fmt.format(v/100) + ' ')); seg.appendChild(createDenomIcon('coin', v));
+          const fromRoll = metaCoinsFromRoll.get(v) || 0; if (fromRoll > 0) { seg.appendChild(document.createTextNode(' ')); const warn = document.createElement('span'); warn.textContent = '(⚠️ Rouleau cassé)'; seg.appendChild(warn); }
+          segments.push(seg);
+        }
+        if (type==='bill' && obj.bill) {
+          const seg = document.createElement('span'); seg.className = 'inline-flex items-center gap-1';
+          const strong = document.createElement('strong'); strong.className = 'font-extrabold'; strong.textContent = String(obj.bill);
+          seg.appendChild(strong); seg.appendChild(document.createTextNode('× ' + fmt.format(v/100) + ' ')); seg.appendChild(createDenomIcon('bill', v));
+          segments.push(seg);
+        }
+        if (segments.length){ any = true; segments.forEach((seg, i) => { line.appendChild(seg); if (i < segments.length - 1){ const sep = document.createElement('span'); sep.textContent = '  •  '; line.appendChild(sep); } }); container.appendChild(line); }
+      });
+      if (!any){ container.innerHTML = '<div class="text-gray-500">—</div>'; }
     }
 
-    if (segments.length){
-      any = true;
-      segments.forEach((seg, i) => {
-        line.appendChild(seg);
-        if (i < segments.length - 1){
-          const sep = document.createElement('span');
-          sep.textContent = '  •  ';
-          line.appendChild(sep);
+    // Restaurations & interactions calculateur
+    const saved = localStorage.getItem("octocash-data");
+    if (saved) {
+      const inv = new Map(Object.entries(JSON.parse(saved)).map(([k,v]) => [Number(k), v]));
+      rows.forEach(r => {
+        const entry = inv.get(r.valueCents);
+        if (entry) {
+          const input = document.querySelector(`input[data-key="${r.key}"][data-type="loose"]`);
+          if (input) input.value = entry.loose || "";
+          if (r.hasRoll) {
+            const select = document.querySelector(`select[data-key="${r.key}"][data-type="rolls"]`);
+            if (select) select.value = entry.rolls || "0";
+          }
         }
       });
-      container.appendChild(line);
     }
-  });
 
-  if (!any){ container.innerHTML = '<div class="text-gray-500">—</div>'; }
-}
-
-
-// Restaurer les données si dispo
-const saved = localStorage.getItem("octocash-data");
-if (saved) {
-  const inv = new Map(Object.entries(JSON.parse(saved)).map(([k,v]) => [Number(k), v]));
-
-  rows.forEach(r => {
-    const entry = inv.get(r.valueCents);
-    if (entry) {
-      // Remplir les champs
-      const input = document.querySelector(`input[data-key="${r.key}"][data-type="loose"]`);
-      if (input) input.value = entry.loose || "";
-
-      if (r.hasRoll) {
-        const select = document.querySelector(`select[data-key="${r.key}"][data-type="rolls"]`);
-        if (select) select.value = entry.rolls || "0";
-      }
-    }
-  });
-}
-    // --- Interactions UI ---
     function refreshTotals(){
-  const inv = getInputCounts();
-  computeTotals(inv);
-
-  // ✅ Sauvegarde compacte
-  const compact = {};
-  inv.forEach((e, v) => {
-    if ((e.loose||0) > 0 || (e.rolls||0) > 0) compact[v] = e;
-  });
-  localStorage.setItem("octocash-data", JSON.stringify(compact));
-
-  // 🔄 Recalcul auto si la recette est affichée
-  const resultSec = document.getElementById('resultats');
-  if (!resultSec.hidden) {
-    runCalculation();
-  }
-}
-
-    // Recalcul en live
-    tbody.addEventListener('input', refreshTotals);
-    tbody.addEventListener('change', refreshTotals);
-
-    // Boutons "+" -> fenêtre de saisie et addition au vrac
-tbody.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-plus]');
-  if (!btn) return;
-
-  const key = btn.dataset.plus;
-  const input = document.querySelector(`input[data-key="${key}"][data-type="loose"]`);
-  if (!input) return;
-
-  // Récupère l’intitulé (ex: "2 €", "10 c", etc.) pour l’afficher dans le prompt
-  const labelCell = btn.closest('tr')?.querySelector('td:nth-child(3)');
-  const denomText = labelCell ? labelCell.textContent.trim() : '';
-
-  // Demande combien ajouter (entier)
-  let q = prompt(`Ajouter combien de ${denomText} ?`);
-
-  if (q === null) return; // Annulé
-
-  // Convertit "2,5" -> 2 (entier, pas de décimales pour un nombre de pièces/billets)
-  q = String(q).replace(',', '.');
-  const add = Math.floor(Number(q));
-
-  if (!Number.isFinite(add) || add <= 0) {
-    // Valeur invalide -> on ne fait rien
-    return;
-  }
-
-  const current = Math.floor(Number(input.value || 0)) || 0;
-  input.value = String(current + add);
-
-  // Recalcule et garde une UX agréable
-  refreshTotals();
-  input.focus();
-  try { // place le curseur en fin si supporté
-    const len = input.value.length;
-    input.setSelectionRange(len, len);
-  } catch {}
-});
-
-
-    // --- Modale fond ---
-    const modal = document.getElementById('fondModal');
-    const radios = () => Array.from(document.querySelectorAll('input[name="fondChoice"]'));
-    function openModal(){
-      const toSelect = state.lastFondChoice;
-      radios().forEach(r=>{ r.checked = (r.value===toSelect); });
-      const customInput = document.getElementById('fondCustom');
-      if (customInput) customInput.value = '';
-      document.getElementById('fondCustomHint').classList.add('hidden');
-      modal.classList.remove('hidden');
-      document.body.classList.add('modal-open');
+      const inv = getInputCounts();
+      computeTotals(inv);
+      const compact = {}; inv.forEach((e, v) => { if ((e.loose||0) > 0 || (e.rolls||0) > 0) compact[v] = e; });
+      localStorage.setItem("octocash-data", JSON.stringify(compact));
+      const resultSec = document.getElementById('resultats'); if (!resultSec.hidden) { runCalculation(); }
     }
-    function closeModal(){
-      modal.classList.add('hidden');
-      document.body.classList.remove('modal-open');
-    }
+    tbody.addEventListener('input', refreshTotals); tbody.addEventListener('change', refreshTotals);
 
-    modal.addEventListener('click', (e)=>{
-      if (e.target.dataset.close === 'backdrop') closeModal();
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-plus]'); if (!btn) return;
+      const key = btn.dataset.plus; const input = document.querySelector(`input[data-key="${key}"][data-type="loose"]`); if (!input) return;
+      const labelCell = btn.closest('tr')?.querySelector('td:nth-child(3)'); const denomText = labelCell ? labelCell.textContent.trim() : '';
+      let q = prompt(`Ajouter combien de ${denomText} ?`); if (q === null) return;
+      q = String(q).replace(',', '.'); const add = Math.floor(Number(q)); if (!Number.isFinite(add) || add <= 0) { return; }
+      const current = Math.floor(Number(input.value || 0)) || 0; input.value = String(current + add);
+      refreshTotals(); input.focus(); try { const len = input.value.length; input.setSelectionRange(len, len); } catch {}
     });
+
+    const modal = document.getElementById('fondModal'); const radios = () => Array.from(document.querySelectorAll('input[name="fondChoice"]'));
+    function openModal(){ const toSelect = state.lastFondChoice; radios().forEach(r=>{ r.checked = (r.value===toSelect); }); const customInput = document.getElementById('fondCustom'); if (customInput) customInput.value = ''; document.getElementById('fondCustomHint').classList.add('hidden'); modal.classList.remove('hidden'); document.body.classList.add('modal-open'); }
+    function closeModal(){ modal.classList.add('hidden'); document.body.classList.remove('modal-open'); }
+    modal.addEventListener('click', (e)=>{ if (e.target.dataset.close === 'backdrop') closeModal(); });
     document.getElementById('fondCancel').addEventListener('click', closeModal);
-
-    document.getElementById('fondCustom').addEventListener('input', ()=>{
-      const customRadio = radios().find(r=>r.value==='custom');
-      if (customRadio) customRadio.checked = true;
-    });
-
+    document.getElementById('fondCustom').addEventListener('input', ()=>{ const customRadio = radios().find(r=>r.value==='custom'); if (customRadio) customRadio.checked = true; });
     document.getElementById('fondConfirm').addEventListener('click', ()=>{
-      const choice = radios().find(r=>r.checked);
-      if (!choice) return;
-      let fond = state.fondCible;
+      const choice = radios().find(r=>r.checked); if (!choice) return; let fond = state.fondCible;
       if (choice.value === 'custom'){
-        const valStr = document.getElementById('fondCustom').value.trim();
-        const num = Number(valStr.replace(',', '.'));
-        if (isNaN(num) || num < 0){
-          document.getElementById('fondCustomHint').classList.remove('hidden');
-          return;
-        }
-        fond = Math.round(num * 100);
-        state.lastFondChoice = 'custom';
-      } else {
-        fond = Number(choice.value);
-        state.lastFondChoice = choice.value;
-      }
-      state.fondCible = fond;
-      closeModal();
-      runCalculation();
+        const valStr = document.getElementById('fondCustom').value.trim(); const num = Number(valStr.replace(',', '.'));
+        if (isNaN(num) || num < 0){ document.getElementById('fondCustomHint').classList.remove('hidden'); return; }
+        fond = Math.round(num * 100); state.lastFondChoice = 'custom';
+      } else { fond = Number(choice.value); state.lastFondChoice = choice.value; }
+      state.fondCible = fond; closeModal(); runCalculation();
     });
-
-    // Bouton Calculer -> ouvre la modale
     document.getElementById('btnCalculer').addEventListener('click', openModal);
 
-function runCalculation(){
-  const inv = getInputCounts();
-  const res = calcRecette(inv, state.fondCible);
-  const resultSec = document.getElementById('resultats');
-  document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible);
+    function runCalculation(){
+      const inv = getInputCounts(); const res = calcRecette(inv, state.fondCible);
+      const resultSec = document.getElementById('resultats'); document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible);
+      if (!res.ok){ resultSec.hidden = false; document.getElementById('valRecette').textContent = res.message; document.getElementById('detailRecette').innerHTML = ''; return; }
+      document.getElementById('valRecette').textContent = centsToStr(res.recetteTotal);
+      renderRecetteOrdered(document.getElementById('detailRecette'), res.recette, res.metaCoinsFromRoll);
+      resultSec.hidden = false;
+      localStorage.setItem("octocash-last", JSON.stringify({ fondCible: state.fondCible, recette: Array.from(res.recette.entries()), metaCoinsFromRoll: Array.from(res.metaCoinsFromRoll.entries()), recetteTotal: res.recetteTotal }));
+    }
 
-  if (!res.ok){
-    resultSec.hidden = false;
-    document.getElementById('valRecette').textContent = res.message;
-    document.getElementById('detailRecette').innerHTML = '';
-    return;
-  }
+    function restoreInputsFromStorage(){
+      const saved = localStorage.getItem("octocash-data"); if (!saved) return;
+      try {
+        const inv = new Map(Object.entries(JSON.parse(saved)).map(([k,v]) => [Number(k), v]));
+        rows.forEach(r => {
+          const entry = inv.get(r.valueCents); if (!entry) return;
+          const input = document.querySelector(`input[data-key="${r.key}"][data-type="loose"]`); if (input) input.value = entry.loose ?? "";
+          if (r.hasRoll) { const select = document.querySelector(`select[data-key="${r.key}"][data-type="rolls"]`); if (select) select.value = String(entry.rolls ?? 0); }
+        });
+      } catch(e){ console.warn("Erreur restauration saisie (octocash-data)", e); }
+    }
 
-  document.getElementById('valRecette').textContent = centsToStr(res.recetteTotal);
-
-  // ⬇️ on transmet la méta pour afficher “(attention rouleau cassé)⚠️” si besoin
-  renderRecetteOrdered(document.getElementById('detailRecette'), res.recette, res.metaCoinsFromRoll);
-
-  resultSec.hidden = false;
-
-  // ✅ Sauvegarder le dernier calcul (pour réouverture)
-  localStorage.setItem("octocash-last", JSON.stringify({
-    fondCible: state.fondCible,                                  // en centimes
-    recette: Array.from(res.recette.entries()),                  // Map -> Array
-    metaCoinsFromRoll: Array.from(res.metaCoinsFromRoll.entries()),
-    recetteTotal: res.recetteTotal                               // en centimes
-  }));
-}
-
-
-// --- Utilitaire : restaurer la saisie depuis localStorage (octocash-data) ---
-function restoreInputsFromStorage(){
-  const saved = localStorage.getItem("octocash-data");
-  if (!saved) return;
-  try {
-    const inv = new Map(Object.entries(JSON.parse(saved)).map(([k,v]) => [Number(k), v]));
-    rows.forEach(r => {
-      const entry = inv.get(r.valueCents);
-      if (!entry) return;
-      const input = document.querySelector(`input[data-key="${r.key}"][data-type="loose"]`);
-      if (input) input.value = entry.loose ?? "";
-      if (r.hasRoll) {
-        const select = document.querySelector(`select[data-key="${r.key}"][data-type="rolls"]`);
-        if (select) select.value = String(entry.rolls ?? 0);
-      }
+    document.getElementById('btnReset').addEventListener('click', () => {
+      document.querySelectorAll('#tbody input').forEach(i => i.value = ''); document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
+      refreshTotals(); document.getElementById('resultats').hidden = true; localStorage.removeItem("octocash-last");
     });
-  } catch(e){
-    console.warn("Erreur restauration saisie (octocash-data)", e);
-  }
-}
 
-// Réinitialiser (tout remettre à zéro ET ne rien recharger au prochain démarrage)
-document.getElementById('btnReset').addEventListener('click', () => {
-  // vider les champs visuellement
-  document.querySelectorAll('#tbody input').forEach(i => i.value = '');
-  document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
+    restoreInputsFromStorage(); refreshTotals();
+    (function restoreLastCalc(){
+      const raw = localStorage.getItem("octocash-last"); if (!raw) return;
+      try {
+        const data = JSON.parse(raw); if (typeof data.fondCible === 'number') state.fondCible = data.fondCible;
+        const recetteMap = new Map(data.recette || []); const metaCoinsFromRoll = new Map(data.metaCoinsFromRoll || []);
+        document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible || 0);
+        document.getElementById('valRecette').textContent = centsToStr(data.recetteTotal || 0);
+        renderRecetteOrdered(document.getElementById('detailRecette'), recetteMap, metaCoinsFromRoll);
+        document.getElementById('resultats').hidden = false;
+      } catch (e) { console.warn("Erreur restauration dernier calcul", e); }
+    })();
+  </script>
 
-  // recalculer et écraser octocash-data avec un état vide
-  refreshTotals();
+  <!-- ========= NAVIGATION ENTRE VUES + OCTOLINE ========= -->
+  <script>
+    // ----- Switch d'onglets -----
+    (function(){
+      const LS_VIEW = 'octo-active-view';
+      const tabs = Array.from(document.querySelectorAll('.octo-tab'));
+      const views = {
+        cash:  document.getElementById('view-cash'),
+        phone: document.getElementById('view-phone'),
+        audio: document.getElementById('view-audio')
+      };
+      function show(view){
+        Object.entries(views).forEach(([k,el])=>{ if (!el) return; el.hidden = (k !== view); });
+        tabs.forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+        localStorage.setItem(LS_VIEW, view);
+      }
+      tabs.forEach(btn => btn.addEventListener('click', ()=> show(btn.dataset.view)));
+      const initial = localStorage.getItem(LS_VIEW) || 'cash'; show(views[initial] ? initial : 'cash');
+    })();
 
-  // cacher les résultats et supprimer la dernière recette sauvegardée
-  document.getElementById('resultats').hidden = true;
-  localStorage.removeItem("octocash-last");
-});
+    // ----- OctoLine (annuaire) -----
+    (function(){
+      // Annuaire complet + alias
+      const DIRECTORY = [
+        { name:'PC Sécurité', code:'2075' },
+        { name:'Cadre de perm', code:'2078' },
+        { name:'SOS Informatique', code:'3001' },
+        { name:'SOS Bâtiment', code:'3002' },
+        { name:'SOS Scéno', code:'3003' },
 
-// =========================
-// ========= INIT =========
-// =========================
+        { name:'Caisse central', code:'2028' },
+        { name:'Service Evènementielle', code:'7089' },
+        { name:'Espace Laniakea', code:'3400' },
+        { name:'Bureau animateur scientifique', code:'3420' },
+        { name:'Salle GAIA FIXE', code:'3118' },
 
-// 1) remettre la saisie (pièces/billets + rouleaux)
-restoreInputsFromStorage();
+        { name:'Sandrine', code:'2080' },
+        { name:'Responsable Extérieur', code:'2081' },
+        { name:'Responsable Intérieur', code:'2082' },
+        { name:'Assistant accueil', code:'2084' },
 
-// 2) recalculer les totaux (met aussi à jour octocash-data)
-refreshTotals();
+        { name:'Abyss Explorer DECT', code:'3119', aliases:['Abyss'] },
+        { name:"Abyss Fil d'attente", code:'3127', aliases:['Abyss'] },
 
-// 3) réafficher le DERNIER détail recette (si présent)
-;(function restoreLastCalc(){
-  const raw = localStorage.getItem("octocash-last");
-  if (!raw) return;
-  try {
-    const data = JSON.parse(raw);
-    if (typeof data.fondCible === 'number') state.fondCible = data.fondCible;
+        { name:'Caisse 1', code:'3149' },
+        { name:'Caisse 2/3', code:'3142' },
+        { name:'Caisse 4/5', code:'3143' },
+        { name:'Caisse 6/7', code:'3144' },
+        { name:'Caisse 8/9', code:'3145' },
+        { name:'Caisse 10/11', code:'3146' },
+        { name:'Caisse 12/13', code:'3147' },
 
-    const recetteMap = new Map(data.recette || []);            // Array -> Map
-    const metaCoinsFromRoll = new Map(data.metaCoinsFromRoll || []);
+        { name:'Cité des enfants', code:'3138' },
 
-    document.getElementById('fondActuelBadge').textContent = centsToStr(state.fondCible || 0);
-    document.getElementById('valRecette').textContent = centsToStr(data.recetteTotal || 0);
-    renderRecetteOrdered(document.getElementById('detailRecette'), recetteMap, metaCoinsFromRoll);
-    document.getElementById('resultats').hidden = false;
-  } catch (e) {
-    console.warn("Erreur restauration dernier calcul", e);
-  }
-})();
+        { name:'Dragon Ride DECT', code:'3124', aliases:['DR','Dragon Ride'] },
+        { name:'Dragon Ride Fixe', code:'3123', aliases:['DR','Dragon Ride'] },
 
+        { name:'Point Service', code:'3148', aliases:['PS','Point Service'] },
 
+        { name:'Ecran Géant DECT', code:'3141', aliases:['EG','Ecran Géant'] },
+        { name:'Ecran Géant Fixe', code:'3121', aliases:['EG Fixe','Ecran Géant'] },
+
+        { name:'Explorateur 1', code:'5010', aliases:['Explo','Explorateur'] },
+        { name:'Explorateur 2', code:'3136', aliases:['Explo','Explorateur'] },
+        { name:'Explorateur 3', code:'3129', aliases:['Explo','Explorateur'] },
+
+        { name:'Namazu Pilote', code:'3151', aliases:['NAM','Namazu'] },
+        { name:'Namazu Quai 1', code:'3152', aliases:['NAM','Namazu'] },
+        { name:'Namazu Quai 2', code:'3140', aliases:['NAM','Namazu'] },
+
+        { name:'Première Envol DECT', code:'3139', aliases:['PE','Première Envol'] },
+        { name:'Première Envol Fixe', code:'3120', aliases:['PE','Première Envol'] },
+
+        { name:"4D / Réveil des géants d'Auvergne DECT", code:'3133', aliases:['4D','Reveil'] },
+        { name:"4D / Réveil des géants d'Auvergne Fixe", code:'3122', aliases:['4D','Reveil','PE'] },
+
+        { name:'Terre en Colère', code:'3117', aliases:['TC'] },
+
+        { name:'Vestiaire DECT', code:'3135' },
+
+        { name:'Volcan Sacré', code:'3125', aliases:['VS','Volcan Sacre'] },
+        { name:'Volcan Sacré FA', code:'3134', aliases:['VS','FA','Volcan Sacre'] },
+
+        { name:'Boutique Auvergne', code:'3204' },
+        { name:'Boutique Science', code:['3203','3202'] }, // multi-numéros
+        { name:'GSF DECT', code:'208' },
+
+        { name:'Rivière aux minéraux', code:'3158', aliases:['RAM','Rivière au minéraux','Riviere'] },
+      ];
+
+      const $search = document.getElementById('olSearch');
+      const $list   = document.getElementById('olList');
+
+      const norm = s => (s||'').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}+/gu,'');
+      const esc  = s => (s||'').toString()
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
+
+      const codesOf = it => Array.isArray(it.code) ? it.code.map(String) : [String(it.code)];
+
+      function matches(it, qRaw){
+        const q = norm(qRaw);
+        if (!q) return true;
+        const hay = [
+          norm(it.name),
+          ...(it.aliases||[]).map(norm),
+          ...codesOf(it) // recherche directe sur les chiffres
+        ];
+        return hay.some(h => h.includes(q));
+      }
+
+      function render(q=''){
+        const rows = DIRECTORY
+          .slice()
+          .sort((a,b)=> norm(a.name).localeCompare(norm(b.name)))
+          .filter(it => matches(it, q));
+
+        if (!rows.length){
+          $list.innerHTML = '<div class="p-4 text-center text-gray-400">Aucun résultat</div>';
+          return;
+        }
+
+        $list.innerHTML = rows.map(it => {
+          const codes = codesOf(it);
+          const codeText = codes.join(' / ');
+          const aliases = it.aliases && it.aliases.length
+            ? `<span class="ml-1 text-[10px] text-gray-500">(${esc(it.aliases.join(', '))})</span>`
+            : '';
+
+          /* Ligne en flex: nom à gauche (wrap), numéro à droite (badge or non cassé) */
+          return `
+            <div class="p-3 hover:bg-gray-800/60 flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="font-semibold text-gray-100 break-words">
+                  ${esc(it.name)}${aliases}
+                </div>
+              </div>
+              <div class="shrink-0">
+                <span class="num-badge text-base md:text-lg">${esc(codeText)}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      $search.addEventListener('input', e=> render(e.target.value));
+
+      // Auto focus quand la vue Phone devient visible
+      const obs = new MutationObserver(()=>{
+        const sec = document.getElementById('view-phone');
+        if (!sec.hidden) setTimeout(()=> $search.focus(), 50);
+      });
+      obs.observe(document.getElementById('view-phone'), { attributes:true, attributeFilter:['hidden'] });
+
+      render('');
+    })();
   </script>
 </body>
 </html>
