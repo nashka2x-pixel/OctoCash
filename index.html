@@ -198,6 +198,60 @@
     .oc-list{ margin:.35rem 0 0 1.2rem; list-style:disc; }
     .oc-hidden{ display:none!important; }
 
+
+    /* Chèques vacances */
+    .cv-toggle{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:2rem;
+      height:2rem;
+      margin:.15rem auto 0;
+      border-radius:9999px;
+      background:rgba(32,32,32,.78);
+      border:1px solid rgba(255,209,102,.32);
+      color:var(--gold);
+      font-weight:900;
+      font-size:1.2rem;
+      line-height:1;
+      transition:background-color .15s, border-color .15s, transform .15s;
+    }
+    .cv-toggle:hover{
+      background:rgba(45,45,45,.90);
+      border-color:rgba(255,209,102,.55);
+      transform:translateY(-1px);
+    }
+    .cv-plus{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      line-height:1;
+      transform:translateY(-1px);
+    }
+    .cv-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:.75rem;
+    }
+    .cv-field{
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(120,120,120,.35);
+      border-radius:.9rem;
+      padding:.7rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:.45rem;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .cv-field input{
+      width:4.5rem;
+      text-align:center;
+      padding:.35rem .45rem;
+      border-radius:.6rem;
+    }
+
   </style>
 </head>
 <body class="min-h-screen text-gray-100">
@@ -252,15 +306,59 @@
             <tbody id="tbody" class="divide-y divide-gray-700"></tbody>
             <tfoot>
               <tr>
-                <td colspan="4" class="p-3 text-center">
-                  <span class="text-lg font-semibold text-gray-200 mr-2">Total caisse :</span>
-                  <span id="totalCaisse" class="mono font-bold text-yellow-400 text-2xl">0,00 €</span>
+                <td colspan="4" class="p-3">
+                  <div class="relative flex items-center justify-center">
+                    <div class="text-center">
+                      <span class="text-lg font-semibold text-gray-200 mr-2">Total caisse :</span>
+                      <span id="totalCaisse" class="mono font-bold text-yellow-400 text-2xl">0,00 €</span>
+                    </div>
+
+                    <button id="btnChequeVacances"
+                            class="cv-toggle shrink-0 absolute right-0"
+                            type="button"
+                            aria-expanded="false"
+                            title="Chèques vacances">
+                      <span class="cv-plus" id="cvToggleIcon">+</span>
+                    </button>
+                  </div>
+
+                  <div id="chequeVacancesPanel" class="rounded-2xl shadow-sm p-3 mt-3 card hidden">
+                    <h3 class="text-lg font-extrabold text-gray-100 mb-3">Chèques vacances :</h3>
+
+                    <div class="cv-grid">
+                      <label class="cv-field">
+                        <input id="cv10" data-cv-value="10" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+                        <span>x 10€</span>
+                      </label>
+
+                      <label class="cv-field">
+                        <input id="cv20" data-cv-value="20" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+                        <span>x 20€</span>
+                      </label>
+
+                      <label class="cv-field">
+                        <input id="cv25" data-cv-value="25" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+                        <span>x 25€</span>
+                      </label>
+
+                      <label class="cv-field">
+                        <input id="cv50" data-cv-value="50" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+                        <span>x 50€</span>
+                      </label>
+                    </div>
+
+                    <div class="mt-3 p-3 rounded-xl bg-gray-800/70 border border-gray-600 text-center">
+                      <span class="font-semibold text-gray-200 mr-2">Montant total :</span>
+                      <span id="cvTotal" class="mono font-bold text-yellow-400 text-xl">0,00 €</span>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </tfoot>
           </table>
         </div>
       </section>
+
 
       <!-- Actions principales -->
       <section class="sticky-cta rounded-2xl">
@@ -810,6 +908,49 @@
       refreshTotals(); input.focus(); try { const len = input.value.length; input.setSelectionRange(len, len); } catch {}
     });
 
+
+    // --- Chèques vacances ---
+    (function(){
+      const btn = document.getElementById('btnChequeVacances');
+      const icon = document.getElementById('cvToggleIcon');
+      const panel = document.getElementById('chequeVacancesPanel');
+      const totalEl = document.getElementById('cvTotal');
+      if (!btn || !panel || !totalEl) return;
+
+      // Module indépendant : aide au précomptage uniquement.
+      // Ne modifie pas le total caisse, ni le calcul de recette.
+      const inputs = Array.from(panel.querySelectorAll('input[data-cv-value]'));
+
+      function updateCvTotal(){
+        let total = 0;
+        inputs.forEach(input => {
+          const qty = Math.max(0, Math.floor(Number(input.value || 0)) || 0);
+          const value = Number(input.dataset.cvValue || 0);
+          total += qty * value;
+        });
+        totalEl.textContent = fmt.format(total);
+        const saved = {};
+        inputs.forEach(input => saved[input.dataset.cvValue] = input.value || '');
+        localStorage.setItem('octocash-cheques-vacances', JSON.stringify(saved));
+      }
+
+      try {
+        const saved = JSON.parse(localStorage.getItem('octocash-cheques-vacances') || '{}');
+        inputs.forEach(input => {
+          if (saved[input.dataset.cvValue] !== undefined) input.value = saved[input.dataset.cvValue];
+        });
+      } catch(e) {}
+
+      btn.addEventListener('click', () => {
+        const isHidden = panel.classList.toggle('hidden');
+        btn.setAttribute('aria-expanded', String(!isHidden));
+        if (icon) icon.textContent = isHidden ? '+' : '−';
+      });
+
+      inputs.forEach(input => input.addEventListener('input', updateCvTotal));
+      updateCvTotal();
+    })();
+
     const modal = document.getElementById('fondModal'); const radios = () => Array.from(document.querySelectorAll('input[name="fondChoice"]'));
     function openModal(){ const toSelect = state.lastFondChoice; radios().forEach(r=>{ r.checked = (r.value===toSelect); }); const customInput = document.getElementById('fondCustom'); if (customInput) customInput.value = ''; document.getElementById('fondCustomHint').classList.add('hidden'); modal.classList.remove('hidden'); document.body.classList.add('modal-open'); }
     function closeModal(){ modal.classList.add('hidden'); document.body.classList.remove('modal-open'); }
@@ -851,6 +992,9 @@
 
     document.getElementById('btnReset').addEventListener('click', () => {
       document.querySelectorAll('#tbody input').forEach(i => i.value = ''); document.querySelectorAll('#tbody select').forEach(s => s.value = '0');
+      document.querySelectorAll('#chequeVacancesPanel input').forEach(i => i.value = '');
+      const cvTotal = document.getElementById('cvTotal'); if (cvTotal) cvTotal.textContent = fmt.format(0);
+      localStorage.removeItem('octocash-cheques-vacances');
       refreshTotals(); document.getElementById('resultats').hidden = true; localStorage.removeItem("octocash-last");
     });
 
@@ -877,18 +1021,39 @@
       const pageIndividuel = document.getElementById('ocPageIndividuel');
       if (!home || !pageGroupe || !pageIndividuel) return;
 
+      function closeDetails(container){
+        container.querySelectorAll('details[open]').forEach(d => d.removeAttribute('open'));
+      }
+
       function showOcPage(page){
         home.classList.toggle('oc-hidden', page !== 'home');
         pageGroupe.classList.toggle('oc-hidden', page !== 'groupe');
         pageIndividuel.classList.toggle('oc-hidden', page !== 'individuel');
       }
 
+      // Dans chaque catégorie : un seul moyen de paiement ouvert à la fois.
+      [pageGroupe, pageIndividuel].forEach(pageEl => {
+        pageEl.querySelectorAll('details.oc-proc').forEach(detail => {
+          detail.addEventListener('toggle', () => {
+            if (!detail.open) return;
+            pageEl.querySelectorAll('details.oc-proc[open]').forEach(other => {
+              if (other !== detail) other.removeAttribute('open');
+            });
+          });
+        });
+      });
+
       document.querySelectorAll('[data-oc-open]').forEach(btn => {
         btn.addEventListener('click', () => showOcPage(btn.dataset.ocOpen));
       });
 
+      // Au retour, on referme le dernier moyen de paiement ouvert.
       document.querySelectorAll('[data-oc-back]').forEach(btn => {
-        btn.addEventListener('click', () => showOcPage('home'));
+        btn.addEventListener('click', () => {
+          closeDetails(pageGroupe);
+          closeDetails(pageIndividuel);
+          showOcPage('home');
+        });
       });
 
       showOcPage('home');
