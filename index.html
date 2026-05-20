@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OctoSuite (OctoCash + OctoLine)</title>
+  <title>OctoSuite (OctoCash + OctoLine + OctoCaisse)</title>
 
   <!-- Icône et manifest -->
   <link rel="icon" type="image/png" href="https://i.postimg.cc/W42shZTD/Chat-GPT-Image-22-sept-2025-19-00-20.png">
@@ -113,11 +113,11 @@
         />
       </button>
 
-      <!-- OctoGuides (placeholder) -->
-      <button class="octo-tab group" data-view="audio" title="OctoGuides – Audio guides">
+      <!-- OctoCaisse (procédures de paiement) -->
+      <button class="octo-tab group" data-view="caisse" title="OctoCaisse – Procédures caisse">
         <img
           src="https://i.postimg.cc/mtdMnhkx/JW0S7Zk7.png"
-          alt="OctoGuides"
+          alt="OctoCaisse"
           class="w-12 h-12 object-cover ring-2 ring-yellow-400/0 group-[.active]:ring-yellow-400 transition rounded-md"
         />
       </button>
@@ -248,11 +248,38 @@
     </div>
   </section>
 
-  <!-- ======== VUE 3 : OCTOGUIDES (placeholder) ======== -->
-  <section id="view-audio" class="max-w-md mx-auto p-4" hidden>
-    <div class="rounded-2xl shadow-sm p-6 text-center card">
-      <h3 class="text-lg font-semibold text-yellow-400 mb-1">OctoGuides</h3>
-      <p class="text-gray-300">Fonctionnalité à venir : audioguides, lecteurs, prêt/retour…</p>
+  <!-- ======== VUE 3 : OCTOCAISSE (procédures caisse) ======== -->
+  <section id="view-caisse" class="max-w-md mx-auto p-4 pb-10" hidden>
+    <div class="rounded-2xl shadow-sm p-4 card">
+      <div class="text-center mb-4">
+        <h2 class="text-2xl font-bold text-yellow-400">OctoCaisse</h2>
+        <p class="text-sm text-gray-300">Procédures rapides pour les paiements particuliers.</p>
+      </div>
+
+      <div id="ocHome" class="space-y-3">
+        <button data-oc-category="groupe" class="w-full text-left p-4 rounded-2xl bg-gray-900/80 border border-gray-700 hover:border-yellow-400 hover:bg-gray-800 transition">
+          <div class="text-lg font-semibold text-yellow-400">Caisse Groupe</div>
+          <div class="text-sm text-gray-300">Différé, sur place, Pass Culture…</div>
+        </button>
+        <button data-oc-category="individuel" class="w-full text-left p-4 rounded-2xl bg-gray-900/80 border border-gray-700 hover:border-yellow-400 hover:bg-gray-800 transition">
+          <div class="text-lg font-semibold text-yellow-400">Caisse individuel</div>
+          <div class="text-sm text-gray-300">Billet HS, billet erreur, Passtime, coupons, EANCV…</div>
+        </button>
+      </div>
+
+      <div id="ocListView" class="hidden">
+        <button id="ocBackHome" class="mb-3 px-3 py-2 rounded-xl bg-black text-gray-200 hover:bg-gray-900">← Retour</button>
+        <h3 id="ocCategoryTitle" class="text-xl font-bold text-yellow-400 mb-3"></h3>
+        <div id="ocProcedureList" class="space-y-2"></div>
+      </div>
+
+      <div id="ocDetailView" class="hidden">
+        <button id="ocBackList" class="mb-3 px-3 py-2 rounded-xl bg-black text-gray-200 hover:bg-gray-900">← Retour</button>
+        <article class="rounded-2xl bg-gray-900/80 border border-gray-700 p-4">
+          <h3 id="ocDetailTitle" class="text-xl font-bold text-yellow-400 mb-3"></h3>
+          <div id="ocDetailContent" class="space-y-4 text-sm text-gray-100"></div>
+        </article>
+      </div>
     </div>
   </section>
 
@@ -606,7 +633,7 @@
       const views = {
         cash:  document.getElementById('view-cash'),
         phone: document.getElementById('view-phone'),
-        audio: document.getElementById('view-audio')
+        caisse: document.getElementById('view-caisse')
       };
       function show(view){
         Object.entries(views).forEach(([k,el])=>{ if (!el) return; el.hidden = (k !== view); });
@@ -615,6 +642,223 @@
       }
       tabs.forEach(btn => btn.addEventListener('click', ()=> show(btn.dataset.view)));
       const initial = localStorage.getItem(LS_VIEW) || 'cash'; show(views[initial] ? initial : 'cash');
+    })();
+
+
+
+    // ----- OctoCaisse (procédures caisse) -----
+    (function(){
+      const PROCEDURES = {
+        groupe: {
+          title: 'Caisse Groupe',
+          items: [
+            {
+              title: 'Paiement Différé',
+              sections: [
+                { title: 'Étapes', lines: [
+                  'Ajuster le dossier au réel.',
+                  'Ne pas toucher à la restauration.',
+                  'Imprimer la facture.',
+                  'Faire signer la facture avec : nom et prénom, mention “Bon pour accord”, signature.'
+                ]},
+                { title: 'Justificatif à garder', lines: ['Facture signée.']},
+                { title: 'Attention', lines: [
+                  'Si le dossier contient une commission, ne pas montrer la facture au client.',
+                  'Dans ce cas, récupérer uniquement le bon d’échange.'
+                ]},
+                { title: 'Astuce', lines: [
+                  'Référence commençant par AV : échange directement avec le client.',
+                  'Référence commençant par TV : passer par un organisateur avec commission.'
+                ]}
+              ]
+            },
+            {
+              title: 'Paiement Sur Place',
+              sections: [
+                { title: 'Étapes', lines: [
+                  'Ajuster le dossier au réel.',
+                  'Ne pas toucher à la restauration.',
+                  'Faire régler le client : chèque, CB, espèces, etc.',
+                  'Imprimer la facture uniquement si le client la demande.'
+                ]},
+                { title: 'Justificatif à garder', lines: ['Aucun justificatif particulier, sauf demande spécifique.']}
+              ]
+            },
+            {
+              title: 'Pass Culture',
+              sections: [
+                { title: 'Important', lines: [
+                  'Le Pass Culture est souvent séparé en 2 dossiers.',
+                  'Il est uniquement valable pour les billets scolaires et les ateliers.'
+                ]},
+                { title: 'Étapes', lines: [
+                  'Ajuster le dossier uniquement à la baisse.',
+                  'Ne jamais ajuster à la hausse.',
+                  'Si modification à la baisse : envoyer la facture à Pierre et Ariba.',
+                  'Moyen de paiement : Pass Culture.'
+                ]},
+                { title: 'Justificatif à garder', lines: ['Aucun justificatif nécessaire.']}
+              ]
+            }
+          ]
+        },
+        individuel: {
+          title: 'Caisse individuel',
+          items: [
+            {
+              title: 'Billet HS',
+              sections: [
+                { title: 'Situation', lines: ['Les billets achetés ne correspondent pas à la période du jour.']},
+                { title: 'Étapes', lines: [
+                  'Récupérer les billets HS papier ou les prendre en photo.',
+                  'Taper des billets classiques du jour correspondant au billet HS : adulte, enfant, bambin.',
+                  'Calculer le montant total du prix des anciens billets HS.',
+                  'Utiliser deux moyens de paiement : Billet HS pour le montant total des anciens billets calculé, puis différence en CB, espèces, etc.'
+                ]},
+                { title: 'Justificatifs à garder', lines: ['Anciens billets HS papier ou photo.', 'Reçu.']}
+              ]
+            },
+            {
+              title: 'Billet erreur',
+              sections: [
+                { title: 'Situation', lines: ['Le client possède des billets avec un titre non valide.']},
+                { title: 'Étapes', lines: [
+                  'Récupérer les billets erreur.',
+                  'Taper des billets “erreur” correspondant exactement aux anciens billets : adulte, enfant, bambin.',
+                  'Moyen de paiement : espèces à 0 €.'
+                ]},
+                { title: 'Justificatifs à garder', lines: ['Billets erreur.', 'Reçu agrafé aux billets erreur.']}
+              ]
+            },
+            {
+              title: 'Passtime',
+              sections: [
+                { title: 'Étapes', lines: [
+                  'Taper des billets Passtime.',
+                  'Saisir le montant de la vente Passtime sur le téléphone du client.',
+                  'Vérifier la confirmation.',
+                  'Faire régler le visiteur : CB, espèces, etc.'
+                ]},
+                { title: 'Justificatif à garder', lines: ['Aucun pour l’instant.']}
+              ]
+            },
+            {
+              title: 'Coupon scolaire',
+              sections: [
+                { title: 'Étapes', lines: [
+                  'Récupérer le justificatif de scolarité.',
+                  'Récupérer une copie des billets des 2 adultes.',
+                  'Si vente sur place, garder le reçu.'
+                ]},
+                { title: 'Justificatifs à garder', lines: ['Justificatif de scolarité.', 'Copie/photo des billets adultes ou reçu.']}
+              ]
+            },
+            {
+              title: 'Offre 6ème',
+              sections: [
+                { title: 'Étapes', lines: [
+                  'Récupérer le justificatif de scolarité.',
+                  'Récupérer une copie du billet de l’adulte.',
+                  'Si vente sur place, garder le reçu.'
+                ]},
+                { title: 'Justificatifs à garder', lines: ['Justificatif de scolarité.', 'Photo du billet adulte ou reçu si vente sur place.']}
+              ]
+            },
+            {
+              title: 'Billet Airbus',
+              sections: [
+                { title: 'Règle', lines: ['1 billet Airbus = 1 personne, peu importe la valeur indiquée sur le billet.']},
+                { title: 'Étapes', lines: [
+                  'Récupérer les billets AIRBUS.',
+                  'Taper “Billet AIRBUS”.',
+                  'Moyen de paiement : AIRBUS.',
+                  'Ne pas modifier la valeur.'
+                ]},
+                { title: 'Justificatif à garder', lines: ['Billet Airbus.']}
+              ]
+            },
+            {
+              title: 'EANCV',
+              sections: [
+                { title: 'Étapes', lines: ['Taper les billets pour connaître le montant total de la vente SANS CONFIRMER.']},
+                { title: 'Sur le TPE', lines: [
+                  'Changer de service sur le TPE.',
+                  'Mettre le montant de la vente et valider.',
+                  'Choisir présenter QR Code.',
+                  'Faire scanner le code au client.'
+                ]},
+                { title: 'Sur la caisse', lines: ['Valider la vente sur la caisse avec le moyen de paiement EANCV.']},
+                { title: 'Justificatif à garder', lines: ['Ticket de confirmation TPE EANCV.']}
+              ]
+            }
+          ]
+        }
+      };
+
+      const $home = document.getElementById('ocHome');
+      const $listView = document.getElementById('ocListView');
+      const $detailView = document.getElementById('ocDetailView');
+      const $categoryTitle = document.getElementById('ocCategoryTitle');
+      const $procedureList = document.getElementById('ocProcedureList');
+      const $detailTitle = document.getElementById('ocDetailTitle');
+      const $detailContent = document.getElementById('ocDetailContent');
+      let currentCategory = null;
+
+      const esc = s => (s||'').toString()
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
+
+      function showHome(){
+        currentCategory = null;
+        $home.classList.remove('hidden');
+        $listView.classList.add('hidden');
+        $detailView.classList.add('hidden');
+      }
+
+      function showList(category){
+        currentCategory = category;
+        const data = PROCEDURES[category];
+        if (!data) return showHome();
+        $categoryTitle.textContent = data.title;
+        $procedureList.innerHTML = data.items.map((item, idx) => `
+          <button data-oc-procedure="${idx}" class="w-full text-left p-3 rounded-xl bg-gray-900/80 border border-gray-700 hover:border-yellow-400 hover:bg-gray-800 transition">
+            <span class="font-semibold text-gray-100">${esc(item.title)}</span>
+            <span class="float-right text-yellow-400">›</span>
+          </button>
+        `).join('');
+        $home.classList.add('hidden');
+        $listView.classList.remove('hidden');
+        $detailView.classList.add('hidden');
+      }
+
+      function showDetail(index){
+        const data = PROCEDURES[currentCategory];
+        const item = data && data.items[index];
+        if (!item) return showList(currentCategory);
+        $detailTitle.textContent = item.title;
+        $detailContent.innerHTML = item.sections.map(section => `
+          <section>
+            <h4 class="font-bold text-yellow-400 mb-1">${esc(section.title)}</h4>
+            <ul class="list-disc pl-5 space-y-1 text-gray-100">
+              ${section.lines.map(line => `<li>${esc(line)}</li>`).join('')}
+            </ul>
+          </section>
+        `).join('');
+        $home.classList.add('hidden');
+        $listView.classList.add('hidden');
+        $detailView.classList.remove('hidden');
+      }
+
+      document.querySelectorAll('[data-oc-category]').forEach(btn => {
+        btn.addEventListener('click', () => showList(btn.dataset.ocCategory));
+      });
+      document.getElementById('ocBackHome').addEventListener('click', showHome);
+      document.getElementById('ocBackList').addEventListener('click', () => showList(currentCategory));
+      $procedureList.addEventListener('click', e => {
+        const btn = e.target.closest('[data-oc-procedure]');
+        if (!btn) return;
+        showDetail(Number(btn.dataset.ocProcedure));
+      });
     })();
 
     // ----- OctoLine (annuaire) -----
