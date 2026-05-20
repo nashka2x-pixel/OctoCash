@@ -89,38 +89,116 @@
       box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 1px 6px rgba(0,0,0,.25);
     }
   
-    .octocaisse-card{
+    /* OctoCaisse */
+    .oc-wrap{ font-size:1.05rem; }
+    .oc-card{
       background:rgba(32,32,32,.88);
-      border:1px solid rgba(255,209,102,.25);
-      transition:all .2s ease;
+      border:1px solid rgba(120,120,120,.45);
+      border-radius:1rem;
+      box-shadow:0 8px 22px rgba(0,0,0,.22);
     }
-    .octocaisse-card:hover{
-      border-color:rgba(255,209,102,.55);
-      transform:translateY(-2px);
-    }
-    .step-badge{
-      width:2rem;
-      height:2rem;
-      border-radius:999px;
-      background:var(--gold);
-      color:#111;
+    .oc-menu-btn{
+      width:100%;
       display:flex;
       align-items:center;
-      justify-content:center;
-      font-weight:800;
-      flex-shrink:0;
+      justify-content:space-between;
+      gap:.75rem;
+      padding:1rem;
+      background:rgba(32,32,32,.88);
+      border:1px solid rgba(120,120,120,.45);
+      border-radius:1rem;
+      color:#f1f1f1;
+      text-align:left;
+      transition:background-color .15s, border-color .15s, transform .15s;
     }
-    .proc-title{
+    .oc-menu-btn:hover{
+      background:rgba(45,45,45,.92);
+      border-color:rgba(255,209,102,.45);
+      transform:translateY(-1px);
+    }
+    .oc-arrow{ color:var(--gold); font-size:1.35rem; font-weight:900; line-height:1; }
+    .oc-back{
+      display:inline-flex;
+      align-items:center;
+      gap:.4rem;
+      color:#f1f1f1;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(120,120,120,.45);
+      border-radius:.85rem;
+      padding:.55rem .8rem;
+      font-weight:700;
+    }
+    .oc-back span{ color:var(--gold); font-size:1.2rem; }
+    .oc-proc{
+      background:rgba(32,32,32,.88);
+      border:1px solid rgba(120,120,120,.45);
+      border-radius:1rem;
+      overflow:hidden;
+    }
+    .oc-proc summary{
+      cursor:pointer;
+      list-style:none;
+      padding:1rem;
+      color:#f1f1f1;
+      font-size:1.18rem;
+      font-weight:700;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:.75rem;
+    }
+    .oc-proc summary::-webkit-details-marker{ display:none; }
+    .oc-proc summary::after{
+      content:"›";
       color:var(--gold);
-      font-size:1.15rem;
+      font-size:1.65rem;
+      font-weight:900;
+      transition:transform .15s ease;
+      line-height:1;
+    }
+    .oc-proc[open] summary::after{ transform:rotate(90deg); }
+    .oc-proc-body{
+      padding:0 1rem 1rem;
+      color:#e5e5e5;
+      font-size:1.08rem;
+      line-height:1.45;
+    }
+    .oc-step{
+      display:flex;
+      gap:.75rem;
+      align-items:flex-start;
+      margin:.7rem 0;
+    }
+    .oc-num{
+      width:2rem;
+      height:2rem;
+      min-width:2rem;
+      border-radius:9999px;
+      background:var(--gold);
+      color:#111;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:1rem;
+      box-shadow:0 0 0 1px rgba(0,0,0,.20), 0 2px 8px rgba(0,0,0,.25);
+    }
+    .oc-box{
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(120,120,120,.35);
+      border-radius:.85rem;
+      padding:.8rem;
+      margin:.8rem 0;
+    }
+    .oc-box-title{
+      color:var(--gold);
       font-weight:800;
+      margin-bottom:.25rem;
     }
-    .proc-section{
-      background:rgba(0,0,0,.25);
-      border:1px solid rgba(255,209,102,.15);
-    }
+    .oc-list{ margin:.35rem 0 0 1.2rem; list-style:disc; }
+    .oc-hidden{ display:none!important; }
 
-</style>
+  </style>
 </head>
 <body class="min-h-screen text-gray-100">
 
@@ -282,218 +360,168 @@
 
   
   <!-- ======== VUE 3 : OCTOCAISSE ========= -->
-  <section id="view-audio" class="max-w-md mx-auto p-4" hidden>
-    <div class="space-y-4">
+  <section id="view-audio" class="max-w-md mx-auto p-4 oc-wrap" hidden>
 
-      <div class="rounded-2xl shadow-sm p-5 card text-center">
-        <h2 class="text-3xl font-black text-yellow-400 mb-2">OctoCaisse</h2>
-        <p class="text-gray-300 text-base">
-          Procédures rapides de caisse groupe & individuelle
-        </p>
+    <!-- Menu principal OctoCaisse -->
+    <div id="ocHome" class="space-y-3">
+      <button class="oc-menu-btn" data-oc-open="groupe">
+        <span class="text-xl font-bold">Caisse Groupe</span>
+        <span class="oc-arrow">›</span>
+      </button>
+
+      <button class="oc-menu-btn" data-oc-open="individuel">
+        <span class="text-xl font-bold">Caisse individuel</span>
+        <span class="oc-arrow">›</span>
+      </button>
+    </div>
+
+    <!-- Page Caisse Groupe -->
+    <div id="ocPageGroupe" class="oc-hidden">
+      <button class="oc-back mb-3" data-oc-back><span>‹</span> Retour</button>
+      <div class="space-y-3">
+        
+          <details class="oc-proc">
+            <summary>Paiement Différé</summary>
+            <div class="oc-proc-body">
+
+              <div class="oc-step"><span class="oc-num">1</span><div>Ajuster le dossier au réel.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Ne pas toucher à la restauration.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Imprimer la facture.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Faire signer la facture avec :
+<ul class="oc-list">
+  <li>Nom et prénom</li>
+  <li>Mention “Bon pour accord”</li>
+  <li>Signature</li>
+</ul></div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatif à garder</div>Facture signée.</div>
+              <div class="oc-box"><div class="oc-box-title">Attention</div>Si le dossier contient une commission, ne pas montrer la facture au client. Récupérer uniquement le bon d’échange.</div>
+              <div class="oc-box"><div class="oc-box-title">Astuce</div>Référence AV : échange direct avec le client.<br>Référence TV : passer par un organisateur avec commission.</div>
+
+            </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Paiement Sur Place</summary>
+            <div class="oc-proc-body">
+
+              <div class="oc-step"><span class="oc-num">1</span><div>Ajuster le dossier au réel.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Ne pas toucher à la restauration.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Faire régler le client : chèque, CB, espèces, etc.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Imprimer la facture uniquement si le client la demande.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatif à garder</div>Aucun justificatif particulier, sauf demande spécifique.</div>
+
+            </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Pass Culture</summary>
+            <div class="oc-proc-body">
+
+              <div class="oc-box"><div class="oc-box-title">Important</div>Le Pass Culture est souvent séparé en 2 dossiers, car il est uniquement valable pour les billets scolaires et les ateliers.</div>
+              <div class="oc-step"><span class="oc-num">1</span><div>Ajuster le dossier uniquement à la baisse.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Ne jamais ajuster à la hausse.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Si modification à la baisse : envoyer la facture à Pierre et Ariba.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Moyen de paiement : Pass Culture.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatif à garder</div>Aucun justificatif nécessaire.</div>
+
+            </div>
+          </details>
       </div>
+    </div>
 
-      <!-- CAISSE GROUPE -->
-      <div class="rounded-2xl p-4 octocaisse-card">
-        <h3 class="text-2xl font-extrabold text-yellow-400 mb-4">Caisse Groupe</h3>
+    <!-- Page Caisse Individuel -->
+    <div id="ocPageIndividuel" class="oc-hidden">
+      <button class="oc-back mb-3" data-oc-back><span>‹</span> Retour</button>
+      <div class="space-y-3">
+        
+          <details class="oc-proc">
+            <summary>Billet HS</summary>
+            <div class="oc-proc-body">
 
-        <details class="proc-section rounded-2xl p-4 mb-4">
-          <summary class="cursor-pointer text-xl font-bold text-yellow-300">
-            Paiement Différé
-          </summary>
+              <div class="oc-box"><div class="oc-box-title">Situation</div>Les billets achetés ne correspondent pas à la période du jour.</div>
+              <div class="oc-step"><span class="oc-num">1</span><div>Récupérer les billets HS papier ou prendre en photo.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Taper des billets classiques du jour correspondant au billet HS : Adulte / Enfant / Bambin.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Calculer le montant total du prix des anciens billets HS.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Utiliser deux moyens de paiement :
+<ul class="oc-list">
+  <li>Billet HS : montant total des anciens billets calculé</li>
+  <li>Différence : CB, espèces, etc.</li>
+</ul></div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatifs à garder</div>Anciens billets HS papier ou photo + reçu.</div>
 
-          <div class="mt-4 space-y-4 text-lg">
-            <div class="flex gap-3">
-              <div class="step-badge">1</div>
-              <div>Ajuster le dossier au réel.</div>
             </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Billet Erreur</summary>
+            <div class="oc-proc-body">
 
-            <div class="flex gap-3">
-              <div class="step-badge">2</div>
-              <div>Ne pas toucher à la restauration.</div>
+              <div class="oc-box"><div class="oc-box-title">Situation</div>Le client possède des billets avec un titre non valide.</div>
+              <div class="oc-step"><span class="oc-num">1</span><div>Récupérer les billets erreur.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Taper des billets “erreur” correspondant exactement aux anciens billets : Adulte / Enfant / Bambin.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Moyen de paiement : espèces à 0 €.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatifs à garder</div>Billets erreur + reçu agrafé aux billets erreur.</div>
+
             </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Passtime</summary>
+            <div class="oc-proc-body">
 
-            <div class="flex gap-3">
-              <div class="step-badge">3</div>
-              <div>Imprimer la facture.</div>
+              <div class="oc-step"><span class="oc-num">1</span><div>Taper des billets Passtime.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Saisir le montant de la vente Passtime sur le téléphone du client.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Vérifier la confirmation.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Faire régler le visiteur : CB, espèces, etc.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatif à garder</div>Aucun pour l’instant.</div>
+
             </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Coupon scolaire</summary>
+            <div class="oc-proc-body">
 
-            <div class="flex gap-3">
-              <div class="step-badge">4</div>
-              <div>
-                Faire signer avec :
-                <ul class="list-disc ml-6 mt-2 text-gray-300">
-                  <li>Nom & prénom</li>
-                  <li>Bon pour accord</li>
-                  <li>Signature</li>
-                </ul>
-              </div>
+              <div class="oc-step"><span class="oc-num">1</span><div>Récupérer le justificatif de scolarité.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Récupérer une copie des billets des 2 adultes.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Si vente sur place, garder le reçu.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatifs à garder</div>Justificatif de scolarité + copie/photo des billets adultes ou reçu.</div>
+
             </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Offre 6ème</summary>
+            <div class="oc-proc-body">
 
-            <div class="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-3">
-              <div class="font-bold text-yellow-300 text-lg mb-1">⚠️ Attention</div>
-              <p class="text-gray-200">
-                Si commission : ne jamais montrer la facture au client.
-                Récupérer uniquement le bon d’échange.
-              </p>
+              <div class="oc-step"><span class="oc-num">1</span><div>Récupérer le justificatif de scolarité.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Récupérer une copie du billet de l’adulte.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Si vente sur place, garder le reçu.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatifs à garder</div>Justificatif de scolarité + photo du billet adulte ou reçu si vente sur place.</div>
+
             </div>
+          </details>
+          <details class="oc-proc">
+            <summary>Billet Airbus</summary>
+            <div class="oc-proc-body">
 
-            <div class="bg-black/30 rounded-xl p-3">
-              <div class="font-bold text-yellow-300 mb-1">💡 Astuce</div>
-              <p>AV = échange direct client</p>
-              <p>TV = organisateur avec commission</p>
+              <div class="oc-box"><div class="oc-box-title">Règle</div>1 billet Airbus = 1 personne, peu importe la valeur indiquée sur le billet.</div>
+              <div class="oc-step"><span class="oc-num">1</span><div>Récupérer les billets AIRBUS.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Taper “Billet AIRBUS”.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Moyen de paiement : AIRBUS.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Ne pas modifier la valeur.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatif à garder</div>Billet Airbus.</div>
+
             </div>
-          </div>
-        </details>
+          </details>
+          <details class="oc-proc">
+            <summary>EANCV</summary>
+            <div class="oc-proc-body">
 
-        <details class="proc-section rounded-2xl p-4 mb-4">
-          <summary class="cursor-pointer text-xl font-bold text-yellow-300">
-            Paiement Sur Place
-          </summary>
+              <div class="oc-step"><span class="oc-num">1</span><div>Taper les billets pour connaître le montant total de la vente sans confirmer.</div></div>
+              <div class="oc-step"><span class="oc-num">2</span><div>Sur le TPE : changer de service.</div></div>
+              <div class="oc-step"><span class="oc-num">3</span><div>Mettre le montant de la vente puis valider.</div></div>
+              <div class="oc-step"><span class="oc-num">4</span><div>Choisir “Présenter QR Code”.</div></div>
+              <div class="oc-step"><span class="oc-num">5</span><div>Faire scanner le code au client.</div></div>
+              <div class="oc-step"><span class="oc-num">6</span><div>Sur la caisse : valider la vente avec le moyen de paiement EANCV.</div></div>
+              <div class="oc-box"><div class="oc-box-title">Justificatif à garder</div>Ticket de confirmation TPE EANCV.</div>
 
-          <div class="mt-4 space-y-4 text-lg">
-            <div class="flex gap-3">
-              <div class="step-badge">1</div>
-              <div>Ajuster le dossier au réel.</div>
             </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">2</div>
-              <div>Ne pas toucher à la restauration.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">3</div>
-              <div>Faire régler le client : CB, espèces, chèque…</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">4</div>
-              <div>Imprimer la facture uniquement si demandée.</div>
-            </div>
-          </div>
-        </details>
-
-        <details class="proc-section rounded-2xl p-4">
-          <summary class="cursor-pointer text-xl font-bold text-yellow-300">
-            Pass Culture
-          </summary>
-
-          <div class="mt-4 space-y-4 text-lg">
-            <div class="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-3">
-              <div class="font-bold text-yellow-300 text-lg mb-1">Important</div>
-              <p>
-                Le Pass Culture est souvent séparé en 2 dossiers :
-                billets scolaires & ateliers.
-              </p>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">1</div>
-              <div>Ajuster uniquement à la baisse.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">2</div>
-              <div>Ne jamais ajuster à la hausse.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">3</div>
-              <div>Envoyer la facture à Pierre et Ariba si baisse.</div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- CAISSE INDIV -->
-      <div class="rounded-2xl p-4 octocaisse-card">
-        <h3 class="text-2xl font-extrabold text-yellow-400 mb-4">Caisse Individuel</h3>
-
-        <details class="proc-section rounded-2xl p-4 mb-4">
-          <summary class="cursor-pointer text-xl font-bold text-yellow-300">
-            Billet HS
-          </summary>
-
-          <div class="mt-4 space-y-4 text-lg">
-            <div class="bg-red-500/10 border border-red-400/30 rounded-xl p-3">
-              <div class="font-bold text-red-300">Situation</div>
-              <p>Billets non valables pour la période du jour.</p>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">1</div>
-              <div>Récupérer ou photographier les billets HS.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">2</div>
-              <div>Taper les billets correspondants du jour.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">3</div>
-              <div>Calculer le montant des anciens billets.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">4</div>
-              <div>
-                Utiliser 2 moyens de paiement :
-                <ul class="list-disc ml-6 mt-2 text-gray-300">
-                  <li>Billet HS</li>
-                  <li>CB / espèces pour la différence</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </details>
-
-        <details class="proc-section rounded-2xl p-4 mb-4">
-          <summary class="cursor-pointer text-xl font-bold text-yellow-300">
-            Billet Erreur
-          </summary>
-
-          <div class="mt-4 space-y-4 text-lg">
-            <div class="flex gap-3">
-              <div class="step-badge">1</div>
-              <div>Récupérer les billets erreur.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">2</div>
-              <div>Taper les billets “erreur” correspondants.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">3</div>
-              <div>Moyen de paiement : espèces à 0 €.</div>
-            </div>
-          </div>
-        </details>
-
-        <details class="proc-section rounded-2xl p-4 mb-4">
-          <summary class="cursor-pointer text-xl font-bold text-yellow-300">
-            Passtime
-          </summary>
-
-          <div class="mt-4 space-y-4 text-lg">
-            <div class="flex gap-3">
-              <div class="step-badge">1</div>
-              <div>Taper les billets Passtime.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">2</div>
-              <div>Saisir le montant sur le téléphone du client.</div>
-            </div>
-
-            <div class="flex gap-3">
-              <div class="step-badge">3</div>
-              <div>Faire confirmer puis encaisser le complément.</div>
-            </div>
-          </div>
-        </details>
-
+          </details>
       </div>
     </div>
   </section>
@@ -837,6 +865,33 @@
         renderRecetteOrdered(document.getElementById('detailRecette'), recetteMap, metaCoinsFromRoll);
         document.getElementById('resultats').hidden = false;
       } catch (e) { console.warn("Erreur restauration dernier calcul", e); }
+    })();
+  </script>
+
+
+  <!-- ========= OCTOCAISSE NAVIGATION INTERNE ========= -->
+  <script>
+    (function(){
+      const home = document.getElementById('ocHome');
+      const pageGroupe = document.getElementById('ocPageGroupe');
+      const pageIndividuel = document.getElementById('ocPageIndividuel');
+      if (!home || !pageGroupe || !pageIndividuel) return;
+
+      function showOcPage(page){
+        home.classList.toggle('oc-hidden', page !== 'home');
+        pageGroupe.classList.toggle('oc-hidden', page !== 'groupe');
+        pageIndividuel.classList.toggle('oc-hidden', page !== 'individuel');
+      }
+
+      document.querySelectorAll('[data-oc-open]').forEach(btn => {
+        btn.addEventListener('click', () => showOcPage(btn.dataset.ocOpen));
+      });
+
+      document.querySelectorAll('[data-oc-back]').forEach(btn => {
+        btn.addEventListener('click', () => showOcPage('home'));
+      });
+
+      showOcPage('home');
     })();
   </script>
 
