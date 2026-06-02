@@ -948,77 +948,7 @@
       const initial = localStorage.getItem(LS_VIEW) || 'cash'; show(views[initial] ? initial : 'cash');
     })();
 
-    // ----- OctoLine (annuaire) -----
-    (function(){
-      // Annuaire complet + alias
-      const DIRECTORY = [
-        { name:'PC Sécu', code:'2075' },
-        { name:'Cadre de perm', code:'2078' },
-        { name:'SOS Informatique', code:'3001' },
-        { name:'SOS Bâtiment', code:'3002' },
-        { name:'SOS Scéno', code:'3003' },
-
-        { name:'Service Evènementielle', code:'7089' },
-        { name:'Espace Laniakea', code:'3400' },
-        { name:'Bureau scientifique', code:'3420' },
-        { name:'Salle GAIA FIXE', code:'3118' },
-
-        { name:'Sandrine', code:'2080' },
-        { name:'Responsable Extérieur', code:'2081' },
-        { name:'Responsable Intérieur', code:'2082' },
-        { name:'Assistant accueil', code:'2084' },
-
-        { name:'Abyss Explorer DECT', code:'3119', aliases:['Abyss'] },
-        { name:"Abyss Fil d'attente", code:'3127', aliases:['Abyss'] },
-
-        { name:'Caisse 1', code:'3149' },
-        { name:'Caisse 2/3', code:'3142' },
-        { name:'Caisse 4/5', code:'3143' },
-        { name:'Caisse 6/7', code:'3144' },
-        { name:'Caisse 8/9', code:'3145' },
-        { name:'Caisse 10/11', code:'3146' },
-        { name:'Caisse 12/13', code:'3147' },
-
-        { name:'Cité des enfants', code:'3138' },
-
-        { name:'DR DECT', code:'3124', aliases:['DR','Dragon Ride'] },
-        { name:'DR Fixe', code:'3123', aliases:['DR','Dragon Ride'] },
-
-        { name:'PS', code:'3148', aliases:['PS','Point Service'] },
-
-        { name:'CM DECT', code:'3141', aliases:['EG','Ecran Géant'] },
-        { name:'CM Fixe', code:'3121', aliases:['EG Fixe','Ecran Géant'] },
-
-        { name:'Explo 1', code:'5010', aliases:['Explo','Explorateur'] },
-        { name:'Explo 2', code:'3136', aliases:['Explo','Explorateur'] },
-        { name:'Explo 3', code:'3129', aliases:['Explo','Explorateur'] },
-
-        { name:'Nam Pilote', code:'3164', aliases:['NAM','Namazu'] },
-        { name:'Nam Quai 1', code:'3152', aliases:['NAM','Namazu'] },
-        { name:'Nam Quai 2', code:'3140', aliases:['NAM','Namazu'] },
-
-        { name:'PE DECT', code:'3139', aliases:['PE','Première Envol'] },
-        { name:'PE Fixe', code:'3120', aliases:['PE','Première Envol'] },
-        { name:'Plané Régie', code:'3155', aliases:['Planétarium','Régie Plané'] },
-        { name:'Plané FA', code:'3159', aliases:['Planétarium','FA'] },
-
-        { name:"4D DECT", code:'3133', aliases:['4D','Reveil'] },
-        { name:"4D Fixe", code:'3122', aliases:['4D','Reveil'] },
-
-        { name:'TC', code:'3117', aliases:['TC'] },
-
-        { name:'Vestiaire DECT', code:'3135' },
-
-        { name:'VS', code:'3125', aliases:['VS','Volcan Sacre'] },
-        { name:'VS FA', code:'3134', aliases:['VS','FA','Volcan Sacre'] },
-
-        { name:'Boutique Auvergne', code:'3204' },
-        { name:'Boutique Science', code:['3203','3202'] }, // multi-numéros
-        { name:'GSF DECT', code:'2088' },
-
-        { name:'RAM', code:'3158', aliases:['RAM','Rivière au minéraux','Riviere'] },
-      ];
-
+  
       const $search = document.getElementById('olSearch');
       const $list   = document.getElementById('olList');
 
